@@ -2,6 +2,8 @@
 
 **Don't trust familiar faces. 别相信熟悉的脸。**
 
+▶ **Play: https://haidongnie.github.io/dead-air/** (desktop browser, headphones recommended · 电脑浏览器，建议戴耳机)
+
 A 2–4 player co-op horror escape game that runs in the browser. Three.js rendering, Playroom Kit multiplayer, WebRTC proximity voice, and every model generated with the Meshy API (`meshy-t2.5` smart topology).
 
 浏览器里的 2–4 人合作恐怖解谜逃脱游戏。Three.js 渲染、Playroom Kit 联机、WebRTC 近距离语音，所有 3D 模型由 Meshy API（`meshy-t2.5` 智能拓扑）生成。
