@@ -1,0 +1,224 @@
+{
+  "player_a": {
+    "preview": "01a17ba3-7186-748f-94d9-625d5005a5b3",
+    "refine": "01a17ba4-2555-7311-af39-6f6f3600f23a",
+    "downloaded": true,
+    "rig": "01a17ba4-bac0-72ac-b24f-23058f955c83",
+    "rigDownloaded": true,
+    "anim": "01a17bae-d449-76fc-8e60-4fef10a7427c",
+    "animDownloaded": true
+  },
+  "player_b": {
+    "preview": "01a17ba3-7181-7403-a8e0-e420cb354a38",
+    "refine": "01a17ba4-02f5-713a-a66f-9df3c88bd843",
+    "downloaded": true,
+    "rig": "01a17ba4-bb50-7172-a6f3-d2a9b7784daf",
+    "rigDownloaded": true,
+    "anim": "01a17bae-d25a-7651-81e0-cdfdfe199a04",
+    "animDownloaded": true
+  },
+  "listener": {
+    "preview": "01a17ba3-7188-70b0-be01-7bb06b473e77",
+    "refine": "01a17ba4-4392-7371-a5e3-679c59e574d0",
+    "downloaded": true,
+    "rig": "01a17ba4-d0eb-7279-998d-01b2b778153c",
+    "rigDownloaded": true
+  },
+  "grandfather_clock": {
+    "preview": "01a17ba3-7181-7404-b6fb-00f97843739d",
+    "refine": "01a17ba3-dfea-77ed-87c1-be8bf4962aa5",
+    "downloaded": true
+  },
+  "tube_radio": {
+    "preview": "01a17ba3-719c-7287-af1c-d3536193c583",
+    "refine": "01a17ba3-e173-76e2-8d89-f13fe64248bf",
+    "downloaded": true
+  },
+  "safe": {
+    "preview": "01a17ba3-7184-7395-a83b-ad4cc3177a87",
+    "refine": "01a17ba3-e280-77b8-93ac-9f7f8c1e3cec",
+    "downloaded": true
+  },
+  "fuse_box": {
+    "preview": "01a17ba3-7197-76ac-a0c4-b6a7c0080c66",
+    "refine": "01a17ba3-bdd4-7799-afda-8f7abcf8ca0c",
+    "downloaded": true
+  },
+  "rocking_chair": {
+    "preview": "01a17ba3-7183-7106-843a-0da678b9f9e2",
+    "refine": "01a17ba4-005f-726a-9d00-4b88c86ead17",
+    "downloaded": true
+  },
+  "doll": {
+    "preview": "01a17ba4-78d3-75d1-b86f-c4c7268f69ab",
+    "refine": "01a17ba5-09f6-74aa-a7a9-4a43e4346996",
+    "downloaded": true
+  },
+  "music_box": {
+    "preview": "01a17ba4-7a0a-76f0-ba69-e6527e92aced",
+    "refine": "01a17ba4-e7f3-7544-8c6d-a0841518bde3",
+    "downloaded": true
+  },
+  "pocket_watch": {
+    "preview": "01a17ba4-9924-7257-9b0d-efde760384ff",
+    "refine": "01a17ba4-e525-71b6-98b4-bff6c8c5613f",
+    "downloaded": true
+  },
+  "altar": {
+    "preview": "01a17ba4-9a24-7235-acdb-b6f82ecc5283",
+    "refine": "01a17ba4-e66c-7235-8378-14f2f49879e2",
+    "downloaded": true
+  },
+  "desk": {
+    "preview": "01a17ba4-bd3b-77b1-b1c9-b62bb712b84d",
+    "refine": "01a17ba5-29d6-7717-ad99-42e6fa284852",
+    "downloaded": true
+  },
+  "fridge": {
+    "preview": "01a17ba5-5f88-73f7-a7a2-16a10431bb5a",
+    "refine": "01a17ba5-cb22-7089-bb99-309b0392d397",
+    "downloaded": true
+  },
+  "sofa": {
+    "preview": "01a17ba5-6261-75a6-8b6e-8ed393712013",
+    "refine": "01a17ba5-cd4c-72e9-8048-a7d789177521",
+    "downloaded": true
+  },
+  "furnace": {
+    "preview": "01a17ba5-727f-75d9-9ba1-bc22a31528dd",
+    "refine": "01a17ba5-db86-77b6-b7ee-687a9677d8ba",
+    "downloaded": true
+  },
+  "crt_tv": {
+    "preview": "01a17ba5-7a89-7360-a521-38b20dc7df35",
+    "refine": "01a17ba5-e328-72f1-b6c4-e5b1446c7d63",
+    "downloaded": true
+  },
+  "player_c": {
+    "preview": "01a17bae-d369-734c-9090-d83cbc398388",
+    "refine": "01a17baf-6646-7138-ac3e-05bb3a543257",
+    "downloaded": true,
+    "rig": "01a17bb0-1026-713f-affe-723c75d0f370",
+    "rigDownloaded": true,
+    "anim": "01a17bb0-f128-7582-96c2-859c71dd7c11",
+    "animDownloaded": true
+  },
+  "player_d": {
+    "preview": "01a17bae-d523-7791-9658-495b783fd9e1",
+    "refine": "01a17baf-4565-74a4-ace1-45ad75534687",
+    "downloaded": true,
+    "rig": "01a17baf-ebd1-74d0-8a4e-ecf31be98ba4",
+    "rigDownloaded": true,
+    "anim": "01a17bb0-d6eb-72a8-8dd1-b5f5de998aac",
+    "animDownloaded": true
+  },
+  "listener2a": {
+    "preview": "01a17bae-d54c-725c-8270-d2b0ba3856d4",
+    "previewThumb": true
+  },
+  "listener2b": {
+    "preview": "01a17bae-d560-75a1-8389-1d2fde8aed47",
+    "previewThumb": true,
+    "refine": "01a17bb3-fc56-7022-8f06-8e2e960b35ff",
+    "downloaded": true,
+    "rig": "01a17bb4-96b7-7075-a861-3902992b9c12",
+    "rigDownloaded": true,
+    "anim": "01a17bb5-3096-73e8-a7bd-439c6396bf56",
+    "animDownloaded": true
+  },
+  "bookshelf": {
+    "preview": "01a17bae-d583-706a-9854-46cbbfa5c9f4",
+    "refine": "01a17baf-42cb-754e-b55b-54d634e43299",
+    "downloaded": true
+  },
+  "dining_table": {
+    "preview": "01a17bae-d581-747e-aa53-48522eaa5413",
+    "refine": "01a17baf-40b4-70ef-b9ae-e1fd17897477",
+    "downloaded": true
+  },
+  "dining_chair": {
+    "preview": "01a17baf-495a-77ff-a60e-9ef0705cc221",
+    "refine": "01a17baf-9214-72b3-9aa6-7e69912bfbc1",
+    "downloaded": true
+  },
+  "stove": {
+    "preview": "01a17baf-8788-724e-9f4d-ad3fa875204e",
+    "refine": "01a17baf-f601-7426-bb0c-adb49ac8f615",
+    "downloaded": true
+  },
+  "kitchen_counter": {
+    "preview": "01a17baf-d1b5-724e-aa66-a3fd67aff737",
+    "refine": "01a17bb0-1c37-71a5-af87-9aa57df89a56",
+    "downloaded": true
+  },
+  "fireplace": {
+    "preview": "01a17baf-e058-74cc-b742-a10a2869373a",
+    "refine": "01a17bb0-49b9-7285-8721-01309225eb20",
+    "downloaded": true
+  },
+  "transmitter": {
+    "preview": "01a17baf-f09e-7228-83a9-6dbc4a22ad4f",
+    "refine": "01a17bb0-3d65-7386-b3cf-6df6f7664313",
+    "downloaded": true
+  },
+  "valve": {
+    "preview": "01a17bb0-200e-7170-a580-35881148823f",
+    "refine": "01a17bb0-6a44-7667-bf10-d481e281f060",
+    "downloaded": true
+  },
+  "fuse": {
+    "preview": "01a17bb0-269d-7532-be9c-c596d64a924c",
+    "refine": "01a17bb0-922e-76a1-a8f7-f209acd67683",
+    "downloaded": true
+  },
+  "basement_shelf": {
+    "preview": "01a17bb0-dc74-70ea-9899-e7279caaf5e9",
+    "refine": "01a17bb1-48a7-742a-99e8-b6fee04c1a42",
+    "downloaded": true
+  },
+  "barrel": {
+    "preview": "01a17bb0-dea1-746c-acea-b7e43cc39d5a",
+    "refine": "01a17bb1-4cc2-704a-9615-74601c74f964",
+    "downloaded": true
+  },
+  "coat_rack": {
+    "preview": "01a17bb0-e282-72bb-a4c2-67cc44ecb173",
+    "refine": "01a17bb1-5af4-7459-942d-ef06920f5f4a",
+    "downloaded": true
+  },
+  "portrait": {
+    "preview": "01a17bb1-0ebf-710a-9271-c62f9000e4b3",
+    "refine": "01a17bb1-7be7-74ce-899b-82efca5b8935",
+    "downloaded": true
+  },
+  "floor_lamp": {
+    "preview": "01a17bb1-124f-7555-9df3-0790159fc314",
+    "refine": "01a17bb1-7d7c-75d2-9f4b-e6ab480e057f",
+    "downloaded": true
+  },
+  "skeleton_key": {
+    "preview": "01a17bb1-355b-752e-8747-f55acd111b40",
+    "refine": "01a17bb1-a28a-743d-b106-40da2f043022",
+    "downloaded": true
+  },
+  "pendant_lamp": {
+    "preview": "01a17bb1-c6c1-7055-92e6-b5400a32d3f1",
+    "refine": "01a17bb2-11cc-779f-95e3-527628ad7de6",
+    "downloaded": true
+  },
+  "front_door": {
+    "preview": "01a17bb1-e1ea-7473-9f82-9bacb9aa3540",
+    "refine": "01a17bb2-4b3d-76b1-bb6b-9d892a030229",
+    "downloaded": true
+  },
+  "phone_table": {
+    "preview": "01a17bb1-ec24-7728-920a-18b736d6487c",
+    "refine": "01a17bb2-3e38-70a4-b36c-71c74cff6f97",
+    "downloaded": true
+  },
+  "radio_head": {
+    "preview": "01a17bb3-f931-73a2-b05d-1403f5964f76",
+    "refine": "01a17bb4-6b5a-73b7-83dc-9de4e8db0d67",
+    "downloaded": true
+  }
+}

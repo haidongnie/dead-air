@@ -1,0 +1,302 @@
+[
+  {
+    "name": "player_a",
+    "rig": true,
+    "height": 1.75,
+    "polycount": 12000,
+    "pose": "a-pose",
+    "prompt": "Full body 1980s American teenager paranormal investigator, brown corduroy jacket over a striped t-shirt, faded blue jeans, white high-top sneakers, short messy brown hair, small backpack, realistic proportions, standing in A-pose, arms away from body, game character",
+    "texture": "Realistic worn 1980s clothing, brown corduroy texture, faded denim, natural skin tones, subtle dirt",
+    "anims": [
+      0,
+      186,
+      367,
+      344
+    ]
+  },
+  {
+    "name": "player_b",
+    "rig": true,
+    "height": 1.68,
+    "polycount": 12000,
+    "pose": "a-pose",
+    "prompt": "Full body 1980s American teenage girl, red and white varsity letterman jacket over a white t-shirt, high-waisted light blue jeans, white sneakers, big curly dark hair with a headband, realistic proportions, standing in A-pose, arms away from body, game character",
+    "texture": "Realistic 1980s clothing, red wool varsity jacket with white leather sleeves, light denim, natural skin tones, subtle dirt",
+    "anims": [
+      0,
+      186,
+      367,
+      344
+    ]
+  },
+  {
+    "name": "listener",
+    "rig": true,
+    "height": 2.3,
+    "polycount": 12000,
+    "pose": "a-pose",
+    "prompt": "Full body tall gaunt humanoid horror creature, emaciated pale grey limbs, very long thin arms and long fingers, wearing a tattered black 1950s preacher suit with white clerical collar, its head is an old rusted radio speaker box with a cloth grille instead of a face, standing in A-pose, arms away from body",
+    "texture": "Decayed pale grey skin, torn black wool suit with dust, rusted brass and dark wood radio head with torn cloth speaker grille, horror",
+    "retired": true
+  },
+  {
+    "name": "grandfather_clock",
+    "polycount": 6000,
+    "prompt": "Antique tall grandfather clock, dark walnut wood case, ornate brass clock face with roman numerals, brass pendulum behind a glass door, Victorian American style",
+    "texture": "Dark aged walnut wood with scratches and dust, tarnished brass, yellowed clock face"
+  },
+  {
+    "name": "tube_radio",
+    "polycount": 6000,
+    "prompt": "1950s American wooden floor console tube radio, walnut cabinet on short legs, large horizontal glowing tuning dial, woven cloth speaker grille, four brass knobs",
+    "texture": "Polished but worn walnut veneer, beige woven speaker cloth, amber tuning dial glass, brass knobs"
+  },
+  {
+    "name": "safe",
+    "polycount": 5000,
+    "prompt": "Antique cast iron floor safe, black body with gold pin-striping and ornate painted decals, heavy front door with brass combination dial and brass handle, 1900s American",
+    "texture": "Black painted cast iron with chipped paint, gold ornamental pinstripes, tarnished brass dial"
+  },
+  {
+    "name": "fuse_box",
+    "polycount": 4000,
+    "prompt": "Old wall mounted electrical fuse box, grey steel cabinet with open hinged door, three empty ceramic fuse sockets inside, large knife switch lever on the side, 1950s",
+    "texture": "Grey painted steel with rust streaks and grime, white ceramic sockets, copper contacts, black bakelite handle"
+  },
+  {
+    "name": "rocking_chair",
+    "polycount": 5000,
+    "prompt": "Antique wooden rocking chair, tall spindle back, curved rockers, armrests, dark weathered wood, American farmhouse style",
+    "texture": "Dark weathered oak wood, worn finish, dust, scratches"
+  },
+  {
+    "name": "doll",
+    "polycount": 4000,
+    "prompt": "Creepy antique porcelain doll sitting, cracked porcelain face, glass eyes, curly blonde hair, faded white lace Victorian dress, small black shoes",
+    "texture": "Cracked pale porcelain skin, yellowed white lace fabric, dusty blonde hair, faded"
+  },
+  {
+    "name": "music_box",
+    "polycount": 3000,
+    "prompt": "Antique wooden music box with open lid, small ballerina figurine standing inside, brass winding key on the side, inlaid wood decoration",
+    "texture": "Rich mahogany wood with inlaid lighter wood patterns, red velvet interior, tarnished brass, porcelain ballerina"
+  },
+  {
+    "name": "pocket_watch",
+    "polycount": 3000,
+    "prompt": "Antique gold pocket watch with open hinged lid, engraved case, white enamel face with roman numerals, short gold chain",
+    "texture": "Tarnished gold metal with engravings, white enamel watch face, black hands"
+  },
+  {
+    "name": "altar",
+    "polycount": 6000,
+    "prompt": "Occult wooden altar table in a cellar, old rough wooden table covered with a stained cloth, many melted white candles, an open old leather bible in the center, three empty small wooden pedestals",
+    "texture": "Rough dark wood, stained off-white cloth, melted wax candles, old leather book with yellowed pages"
+  },
+  {
+    "name": "desk",
+    "polycount": 6000,
+    "prompt": "Antique wooden writing desk with drawers, a vintage black typewriter on top, scattered papers, 1950s American study furniture",
+    "texture": "Dark mahogany wood with worn varnish, black enamel typewriter with chrome details, yellowed papers"
+  },
+  {
+    "name": "fridge",
+    "polycount": 4000,
+    "prompt": "Rusty 1950s American refrigerator, rounded white enamel body, chrome pull handle, dented, rust stains",
+    "texture": "Off-white enamel paint with rust stains and grime, chrome handle"
+  },
+  {
+    "name": "sofa",
+    "polycount": 5000,
+    "prompt": "Old sofa completely covered by a dirty white dust sheet, draped cloth folds, abandoned house furniture",
+    "texture": "Dirty off-white cotton sheet with stains and dust"
+  },
+  {
+    "name": "furnace",
+    "polycount": 6000,
+    "prompt": "Old basement coal furnace boiler, round cast iron body with a small door, large ducts and pipes going upward, rusty",
+    "texture": "Rusty dark cast iron, soot, oxidized metal pipes"
+  },
+  {
+    "name": "crt_tv",
+    "polycount": 4000,
+    "prompt": "1980s American wooden cabinet CRT television set on four short legs, curved glass screen, rotary channel dials on the side, rabbit ear antenna on top",
+    "texture": "Fake walnut wood grain vinyl, dark grey curved glass screen, silver plastic dials, chrome antenna"
+  },
+  {
+    "name": "player_c",
+    "rig": true,
+    "height": 1.78,
+    "polycount": 12000,
+    "pose": "a-pose",
+    "prompt": "Full body 1980s American Black teenage boy, round wire glasses, olive green army surplus field jacket over a faded band t-shirt, khaki pants, white sneakers, short black hair, camcorder strap across chest, realistic proportions, standing in A-pose, arms away from body, game character",
+    "texture": "Realistic worn 1980s clothing, olive canvas jacket, faded print t-shirt, khaki cotton, natural skin tones, subtle dirt",
+    "anims": [
+      0,
+      186,
+      367,
+      344
+    ]
+  },
+  {
+    "name": "player_d",
+    "rig": true,
+    "height": 1.66,
+    "polycount": 12000,
+    "pose": "a-pose",
+    "prompt": "Full body 1980s American teenage girl, oversized denim jacket with sew-on patches over a yellow hoodie, black leggings, red high-top sneakers, blonde side ponytail with a scrunchie, realistic proportions, standing in A-pose, arms away from body, game character",
+    "texture": "Realistic 1980s clothing, stonewashed denim with colorful patches, yellow cotton hoodie, natural skin tones, subtle dirt",
+    "anims": [
+      0,
+      186,
+      367,
+      344
+    ]
+  },
+  {
+    "name": "listener2a",
+    "rig": true,
+    "height": 2.3,
+    "polycount": 12000,
+    "pose": "a-pose",
+    "prompt": "Full body tall thin humanoid man in a long black 1950s preacher suit with a white clerical collar and black tie, very long thin arms and legs, instead of a human head he has an antique wooden boxy 1950s tube radio set sitting on his neck, the radio front has a round cloth speaker and a glowing tuning dial, standing in A-pose, arms away from body",
+    "texture": "Black wool suit dusty and torn, white collar stained, walnut wood radio cabinet head with beige woven speaker cloth and amber glowing dial glass, pale grey hands",
+    "anims": [
+      0,
+      123,
+      386,
+      4
+    ],
+    "previewOnly": true,
+    "retired": true
+  },
+  {
+    "name": "listener2b",
+    "rig": true,
+    "height": 2.3,
+    "polycount": 12000,
+    "pose": "a-pose",
+    "prompt": "Full body gaunt preacher with a vintage radio for a head, black long frock coat, white clerical collar, grey emaciated hands with long fingers, the head is a rectangular old radio receiver box with speaker grille and knobs, no face, tall and thin, standing in A-pose, arms away from body",
+    "texture": "Dusty black frock coat, yellowed white collar, rusted metal and dark wood radio head with torn speaker grille, pale grey skin",
+    "anims": [
+      0,
+      123,
+      386,
+      4
+    ]
+  },
+  {
+    "name": "bookshelf",
+    "polycount": 6000,
+    "prompt": "Tall antique wooden bookshelf full of old leather books, some books fallen over, dark oak",
+    "texture": "Dark oak wood, old leather book spines in brown red green colors, dust"
+  },
+  {
+    "name": "dining_table",
+    "polycount": 4000,
+    "prompt": "Antique farmhouse wooden dining table, rectangular, worn dark oak top, turned legs",
+    "texture": "Worn dark oak with scratches, water rings and dust"
+  },
+  {
+    "name": "dining_chair",
+    "polycount": 3000,
+    "prompt": "Antique wooden farmhouse dining chair, spindle back, worn dark wood seat",
+    "texture": "Worn dark oak wood with scratches"
+  },
+  {
+    "name": "stove",
+    "polycount": 4000,
+    "prompt": "1950s American white enamel kitchen stove with oven door and four burners on top, chrome trim, control knobs",
+    "texture": "Off-white enamel with grease stains and rust spots, chrome trim, black cast iron burner grates"
+  },
+  {
+    "name": "kitchen_counter",
+    "polycount": 4000,
+    "prompt": "Old 1950s kitchen base cabinet counter with a white porcelain sink and faucet, painted wooden cabinet doors, two meters long",
+    "texture": "Mint green chipped paint on wood doors, white porcelain sink with stains, worn laminate countertop"
+  },
+  {
+    "name": "fireplace",
+    "polycount": 5000,
+    "prompt": "Old red brick fireplace with a wooden mantel shelf on top, sooty open firebox with cold ashes and iron grate, American farmhouse",
+    "texture": "Old red bricks with soot, dark stained wood mantel, black ash"
+  },
+  {
+    "name": "transmitter",
+    "polycount": 6000,
+    "prompt": "Vintage 1950s radio transmitter equipment rack, tall grey metal cabinet with rows of glowing vacuum tubes behind glass, analog dial meters, toggle switches, thick cables",
+    "texture": "Grey hammertone painted steel with rust, glass vacuum tubes with orange glow, black bakelite knobs, white meter faces"
+  },
+  {
+    "name": "valve",
+    "polycount": 3000,
+    "prompt": "Old rusty iron pipe section with a large round red painted handwheel valve, wall mounted plumbing",
+    "texture": "Rusty iron pipe, chipped red paint on the wheel, grime"
+  },
+  {
+    "name": "fuse",
+    "polycount": 1500,
+    "prompt": "Single antique glass cartridge fuse, clear glass tube with brass metal end caps and a thin wire filament inside",
+    "texture": "Clear glass, tarnished brass caps, copper filament"
+  },
+  {
+    "name": "basement_shelf",
+    "polycount": 5000,
+    "prompt": "Old wooden basement shelving unit with dusty mason jars of preserves, paint cans and rusty tools",
+    "texture": "Rough weathered wood, dusty glass jars with dark contents, rusty metal cans"
+  },
+  {
+    "name": "barrel",
+    "polycount": 2500,
+    "prompt": "Old wooden barrel with rusty iron bands",
+    "texture": "Weathered oak staves, rusty iron hoops"
+  },
+  {
+    "name": "coat_rack",
+    "polycount": 3000,
+    "prompt": "Antique wooden standing coat rack with a fedora hat and a long dark trench coat hanging on it",
+    "texture": "Dark wood, grey felt hat, dark brown wool coat"
+  },
+  {
+    "name": "portrait",
+    "polycount": 3000,
+    "prompt": "Large antique framed oil painting of a 1950s family portrait, ornate gilded wooden frame, a preacher father, a mother and a little girl, their faces scratched out",
+    "texture": "Ornate tarnished gold frame, dark oil painting with scratched out faces, cracked varnish"
+  },
+  {
+    "name": "floor_lamp",
+    "polycount": 2500,
+    "prompt": "Antique floor lamp with a fringed fabric lampshade and brass pole",
+    "texture": "Tarnished brass, faded cream fabric shade with fringe, stains"
+  },
+  {
+    "name": "skeleton_key",
+    "polycount": 1500,
+    "prompt": "Antique large iron skeleton key with ornate round bow",
+    "texture": "Dark rusted iron with worn edges"
+  },
+  {
+    "name": "pendant_lamp",
+    "polycount": 2000,
+    "prompt": "Vintage hanging ceiling pendant lamp, milk glass bowl shade on a short chain",
+    "texture": "Frosted milk glass, tarnished brass chain and fittings"
+  },
+  {
+    "name": "front_door",
+    "polycount": 3000,
+    "prompt": "Old wooden farmhouse front door slab with four small glass window panes at the top, raised panels, brass doorknob, peeling paint",
+    "texture": "Peeling white paint over dark wood, dirty glass panes, tarnished brass knob"
+  },
+  {
+    "name": "phone_table",
+    "polycount": 3000,
+    "prompt": "1950s black rotary dial telephone sitting on a small wooden side table with a drawer",
+    "texture": "Black bakelite telephone, coiled cord, dark walnut table with scratches"
+  },
+  {
+    "name": "radio_head",
+    "polycount": 2500,
+    "prompt": "Antique small boxy wooden 1950s tabletop tube radio, rounded corners, large round cloth speaker grille on the front, small glowing tuning dial window, two bakelite knobs, cracked",
+    "texture": "Dark walnut wood cabinet with scratches, torn beige speaker cloth, amber glowing dial glass, brown bakelite knobs, grime"
+  }
+]
