@@ -108,6 +108,40 @@ const S = {
   phoneSub: { zh: '[电话] "是我，{r}。我在地下室。下来。一个人下来。"', en: '[Phone] "It\'s me, {r}. I\'m in the basement. Come down. Come alone."' },
   radioSub: { zh: '[收音机] 露丝……{a}。安妮……{b}。以利亚……{c}。回家……{d}。', en: '[Radio] Ruth… {a}. Annie… {b}. Elias… {c}. Home… {d}.' },
   ttsHint: { zh: '（记下这四个数字）', en: '(Write those four numbers down)' },
+  // TikTok LIVE via TikFinity
+  giftT1: { zh: '🎁 {n} 送出 {g}×{c} · 收音机响了，它听见了', en: '🎁 {n} sent {g}×{c} · the radio squawks — it heard that' },
+  giftT2: { zh: '🔔 {n} 送出 {g}×{c} · 它在追猎主播！', en: '🔔 {n} sent {g}×{c} · it is hunting the streamer!' },
+  giftT3: { zh: '👁 {n} 送出 {g}×{c} · 召唤了它的真身！', en: '👁 {n} sent {g}×{c} · summoned its true form!' },
+  giftQuiet: { zh: '🎁 {n} 送出 {g}×{c}', en: '🎁 {n} sent {g}×{c}' },
+  ttTitle: { zh: 'TikTok 直播互动（TikFinity）', en: 'TikTok LIVE gifts (TikFinity)' },
+  ttEnable: { zh: '连接 TikFinity：观众打赏会发出声音，把鬼引向主播', en: 'Connect TikFinity: viewer gifts make noise that lures the ghost to the streamer' },
+  ttUrl: { zh: 'WebSocket 地址', en: 'WebSocket URL' },
+  ttTiers: {
+    zh: '1–9💎：发出声响，鬼循声而来 · 10–99💎：鬼追猎主播 15 秒 · 100💎+：在主播附近召唤真身',
+    en: '1–9💎: a noise the ghost follows · 10–99💎: it hunts the streamer for 15s · 100💎+: summons its true form nearby',
+  },
+  ttHelp: {
+    zh: '需要在电脑上运行 TikFinity 桌面版并开启直播。只有主播本人需要开启此项。',
+    en: 'Run the TikFinity desktop app with your LIVE started. Only the streamer needs this on.',
+  },
+  ttTest: { zh: '测试', en: 'Test' },
+  ttS_connecting: { zh: '正在连接 TikFinity…（请确认 TikFinity 桌面版正在运行）', en: 'Connecting to TikFinity… (make sure the TikFinity desktop app is running)' },
+  ttS_prompt: { zh: '浏览器会询问是否允许访问「此设备上的应用」——请点「允许」', en: 'Your browser will ask to access "apps on this device" — click Allow' },
+  ttS_on: { zh: '已连接 TikFinity · 等待直播事件', en: 'Connected to TikFinity · waiting for LIVE events' },
+  ttS_live: { zh: '正在接收直播事件 ✓', en: 'Receiving LIVE events ✓' },
+  ttS_denied: {
+    zh: '浏览器拒绝了访问。点击地址栏左侧的图标 → 网站设置 →「此设备上的应用」→ 允许，然后刷新页面。',
+    en: 'The browser blocked access. Click the icon left of the address bar → Site settings → "Apps on device" → Allow, then reload.',
+  },
+  ttS_error: {
+    zh: '连接不上，正在重试…请确认 TikFinity 桌面版（Windows）已打开。Safari 暂不支持，请用 Chrome / Edge。',
+    en: 'Cannot connect, retrying… Is the TikFinity desktop app (Windows) open? Safari is not supported yet; use Chrome or Edge.',
+  },
+  ttLast: { zh: '最近礼物：{n} · {g}×{c}（{d}💎）', en: 'Last gift: {n} · {g}×{c} ({d}💎)' },
+  ttOff: { zh: 'TikTok 未连接', en: 'TikTok off' },
+  ttConnecting: { zh: 'TikTok 连接中…', en: 'TikTok connecting…' },
+  ttOn: { zh: 'TikTok 已连接', en: 'TikTok connected' },
+  ttError: { zh: 'TikTok 连接失败 · 正在重试', en: 'TikTok connection failed · retrying' },
   tSolo: { zh: '只有你一个人……阀门会自己转动另一半。', en: 'Only you… the other valve turns on its own.' },
   doll: { zh: '瓷娃娃', en: 'doll' },
   musicbox: { zh: '八音盒', en: 'music box' },
@@ -149,9 +183,10 @@ const S = {
 
 export type Key = keyof typeof S;
 export function t(key: Key, vars?: Record<string, string | number>): string {
-  let s: string = S[key][lang];
-  if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
-  return s;
+  // One pass with a function replacer: values (viewer nicknames, gift names) are inserted
+  // literally, so "$&" or "{g}" inside a name can't rewrite the template.
+  const s: string = S[key][lang];
+  return vars ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : s;
 }
 
 // ---------------------------------------------------------------------------

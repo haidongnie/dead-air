@@ -328,6 +328,35 @@ export class Sound {
     }
   }
 
+  /**
+   * A viewer's gift: the streamer's pocket radio squawks. Tier 1 is a short squelch,
+   * tier 2 adds a ringing bell, tier 3 is a full emergency-tone blast.
+   */
+  giftNoise(pos: Vec, tier: 1 | 2 | 3) {
+    const t = this.now;
+    const dst = this.spatial(pos, 2.5, 0.7).input;
+    const dur = tier === 1 ? 0.7 : tier === 2 ? 1.4 : 2.4;
+    // squelch: band-limited noise with a gated, stuttering envelope
+    const n = this.noiseSrc();
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.9;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    for (let i = 0; i < dur * 14; i++) g.gain.setValueAtTime(Math.random() < 0.7 ? 0.5 + tier * 0.2 : 0.05, t + i / 14);
+    g.gain.setValueAtTime(0.0001, t + dur);
+    n.connect(bp).connect(g).connect(dst);
+    n.start(t, Math.random()); n.stop(t + dur + 0.05);
+    // the radio's beep
+    const o = this.ctx.createOscillator(); o.type = 'square'; o.frequency.value = tier === 3 ? 853 : 1046;
+    const og = this.ctx.createGain(); this.env(og, t, 0.005, 0.25, 0.25);
+    o.connect(og).connect(dst); o.start(t); o.stop(t + 0.35);
+    if (tier >= 2) for (let i = 0; i < (tier === 3 ? 6 : 3); i++) this.bell(pos, 659 * (i % 2 ? 1.06 : 1), 0.35, 0.25 + i * 0.22);
+    if (tier === 3) {
+      const o2 = this.ctx.createOscillator(); o2.frequency.value = 960;
+      const g2 = this.ctx.createGain(); this.env(g2, t + 0.3, 0.02, 0.3, 1.8);
+      o2.connect(g2).connect(dst); o2.start(t + 0.3); o2.stop(t + 2.3);
+    }
+  }
+
   /** The Emergency Alert System attention signal: SAME header bursts, then the 853+960 Hz tone. */
   eas(): () => void {
     const c = this.ctx;

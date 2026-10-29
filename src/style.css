@@ -50,6 +50,16 @@ button { font: inherit; cursor: pointer; }
 .opt { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 15px; }
 .opt input { accent-color: var(--red); width: 16px; height: 16px; }
 .note { font-size: 12px; color: var(--dim); line-height: 1.5; margin: 6px auto 18px; max-width: 520px; }
+.tt { margin: 0 auto 18px; max-width: 560px; text-align: left; border: 1px solid #3a3a3a; padding: 8px 14px; background: rgba(0,0,0,0.35); }
+.tt summary { cursor: pointer; font-size: 15px; color: #25f4ee; }
+.tt .opt { justify-content: flex-start; margin-top: 10px; font-size: 14px; }
+.tt .note { margin: 8px 0; max-width: none; }
+.tt-row { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--dim); margin-top: 8px; flex-wrap: wrap; }
+.tt-row input[type=text] { flex: 1; min-width: 200px; font-family: var(--mono); font-size: 18px; background: #0c0c0c; color: var(--ink); border: 1px solid #444; padding: 2px 8px; }
+.tt-tests button { font-family: var(--mono); font-size: 17px; background: #1a1a1a; color: var(--ink); border: 1px solid #555; padding: 1px 10px; }
+.tt-tests button:hover { border-color: #fe2c55; }
+#tt-status.on { color: #25f4ee; } #tt-status.error { color: #fe2c55; }
+
 #enter {
   font-family: var(--mono); font-size: 30px; padding: 10px 34px; color: #fff; background: transparent;
   border: 2px solid var(--red); letter-spacing: 2px; box-shadow: 0 0 24px rgba(208, 24, 24, 0.35) inset;
@@ -85,6 +95,21 @@ kbd { display: inline-block; font-family: var(--mono); font-size: 18px; border: 
 .toast { background: rgba(0,0,0,0.45); padding: 5px 10px; border-left: 3px solid var(--red); animation: tin 0.3s ease-out; transition: opacity 1s; }
 .toast.out { opacity: 0; }
 @keyframes tin { from { transform: translateX(-20px); opacity: 0; } }
+/* TikTok LIVE gift feed */
+#giftcol { position: absolute; right: 22px; top: 96px; width: min(360px, 40vw); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+#tiktok { font-size: 17px; padding: 1px 10px; border: 1px solid #444; background: rgba(0,0,0,0.45); }
+#tiktok.on { color: #25f4ee; border-color: #25f4ee; }
+#tiktok.connecting { color: var(--amber); }
+#tiktok.error { color: #fe2c55; border-color: #fe2c55; }
+#tiktok-legend { font-family: var(--type); font-size: 12px; line-height: 1.4; color: #cfc8b8; text-align: right; background: rgba(0,0,0,0.35); padding: 4px 8px; }
+#gifts { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.gift { font-family: var(--type); font-size: 15px; padding: 6px 12px; background: rgba(0,0,0,0.6); border-right: 3px solid #25f4ee; text-align: right; animation: gin 0.35s ease-out; transition: opacity 1s; }
+.gift.t2 { border-color: #fe2c55; font-size: 16px; }
+.gift.t3 { border-color: #fe2c55; font-size: 19px; color: #fff; background: linear-gradient(90deg, rgba(254,44,85,0.15), rgba(254,44,85,0.55)); box-shadow: 0 0 24px rgba(254,44,85,0.5); animation: gin 0.35s ease-out, gpulse 0.6s ease-in-out 3; }
+.gift.out { opacity: 0; }
+@keyframes gin { from { transform: translateX(30px); opacity: 0; } }
+@keyframes gpulse { 50% { transform: scale(1.05); } }
+
 #subtitle {
   position: absolute; left: 50%; bottom: 13%; transform: translateX(-50%); max-width: min(780px, 90vw); text-align: center;
   font-family: var(--type); font-size: 19px; line-height: 1.45; color: #fff3d0; background: rgba(0,0,0,0.55); padding: 8px 16px;
@@ -158,10 +183,18 @@ body { --dg: calc(var(--danger) * 1px); }
 #end-again { margin-top: 10px; font-family: var(--mono); font-size: 28px; padding: 8px 30px; background: transparent; color: #fff; border: 2px solid var(--red); }
 #end-again[disabled] { opacity: 0.6; border-color: #555; cursor: default; }
 
+/* below ~1100px the centered room row would run into the objective box: tuck it under the VHS clock */
+@media (max-width: 1100px) {
+  #toprow { left: 22px; top: 104px; transform: none; font-size: 16px; }
+  #toasts { top: 140px; }
+}
+
 @media (max-width: 700px) {
   #vhs { font-size: 20px; top: 12px; left: 12px; }
   #objective { font-size: 13px; top: 12px; right: 12px; }
   #team, #inv { bottom: 12px; font-size: 16px; }
   #team { left: 12px; } #inv { right: 12px; width: 160px; }
-  #toprow { top: auto; bottom: 120px; }
+  #toprow { top: 84px; }
+  #toasts { top: 118px; }
+  #giftcol { top: 76px; right: 12px; width: 55vw; }
 }

@@ -56,6 +56,25 @@ export class Hud {
     while (this.toastBox.children.length > 5) this.toastBox.lastElementChild!.remove();
   }
 
+  /** Gift feed for TikTok LIVE: its own column so viewers can spot their names on stream. */
+  giftToast(text: string, tier: 1 | 2 | 3) {
+    const box = $('gifts');
+    const d = document.createElement('div');
+    d.className = `gift t${tier}`;
+    d.textContent = text;
+    box.prepend(d);
+    setTimeout(() => d.classList.add('out'), tier === 3 ? 9000 : 6000);
+    setTimeout(() => d.remove(), tier === 3 ? 10000 : 7000);
+    while (box.children.length > 6) box.lastElementChild!.remove();
+  }
+
+  tiktok(state: 'off' | 'connecting' | 'on' | 'error') {
+    const el = $('tiktok');
+    el.className = `${state === 'off' ? 'hidden ' : ''}${state}`;
+    el.textContent = t(state === 'on' ? 'ttOn' : state === 'connecting' ? 'ttConnecting' : state === 'error' ? 'ttError' : 'ttOff');
+    $('tiktok-legend').classList.toggle('hidden', state !== 'on');
+  }
+
   subtitle(text: string, seconds = 4) {
     this.subtitleEl.textContent = text;
     this.subtitleEl.classList.remove('hidden');

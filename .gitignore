@@ -4,3 +4,4 @@ assets_raw
 tools/meshy*.log
 .env*
 .DS_Store
+.test-build

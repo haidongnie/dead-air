@@ -24,6 +24,23 @@
       <p class="story" data-t="story"></p>
       <label class="opt"><input type="checkbox" id="voice-opt" checked /> <span data-t="voiceOpt"></span></label>
       <p class="note" data-t="voiceNote"></p>
+      <details id="tt-panel" class="tt">
+        <summary data-t="ttTitle"></summary>
+        <label class="opt"><input type="checkbox" id="tt-enable" /> <span data-t="ttEnable"></span></label>
+        <div class="tt-row">
+          <label for="tt-url" data-t="ttUrl"></label>
+          <input id="tt-url" type="text" spellcheck="false" autocomplete="off" />
+        </div>
+        <p class="note" data-t="ttTiers"></p>
+        <p class="note" data-t="ttHelp"></p>
+        <div class="tt-row tt-tests">
+          <span data-t="ttTest"></span>
+          <button type="button" data-test="1">🌹 1💎</button>
+          <button type="button" data-test="30">🔔 30💎</button>
+          <button type="button" data-test="500">👁 500💎</button>
+        </div>
+        <p id="tt-status" class="note"></p>
+      </details>
       <button id="enter" data-t="enter"></button>
       <p id="status" class="status"></p>
       <p id="invite-hint" class="note hidden">↳ invite link · 邀请链接</p>
@@ -42,6 +59,7 @@
     <div id="prompt" class="hidden"></div>
     <div id="holdbar" class="hidden"><i></i></div>
     <div id="toasts"></div>
+    <div id="giftcol"><span id="tiktok" class="hidden"></span><div id="tiktok-legend" class="hidden" data-t="ttTiers"></div><div id="gifts"></div></div>
     <div id="subtitle" class="hidden"></div>
     <div id="team"></div>
     <div id="inv">

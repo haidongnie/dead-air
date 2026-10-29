@@ -1,7 +1,7 @@
 import type { PlayerState } from 'playroomkit';
 import type { Net } from './net';
 import {
-  newGame, teamItems, RELICS, ROUND_MS, type Action, type CreatureNet, type GameState, type Relic,
+  newGame, teamItems, giftTier, RELICS, ROUND_MS, type Action, type CreatureNet, type GameState, type GiftTier, type Relic,
 } from './state';
 import {
   NAV, findPath, groundY, lineOfSight, nearestNode, resolveCircle, type NavNode,
@@ -148,6 +148,10 @@ export class Host {
         this.net.fx({ k: 'toast', key: 'tPhone', n });
         return;
       }
+      case 'gift': {
+        this.gift(a, from);
+        return;
+      }
       case 'restart': {
         if (g.phase === 'play') return;
         const fresh = newGame(g.round + 1);
@@ -167,6 +171,7 @@ export class Host {
     const cur = this.net.game();
     if (!cur) return;
     const seen = this.collect(cur);
+    for (const k of [1, 2, 3] as GiftTier[]) this.giftCooldown[k] = Math.max(0, this.giftCooldown[k] - dt);
     if (cur.phase === 'play') {
       this.phone(cur, dt);
       this.checkValves(cur, seen, dt);
@@ -196,6 +201,38 @@ export class Host {
       });
     }
     return out;
+  }
+
+  // seconds until each tier may move the creature again (noise + toast always happen)
+  private giftCooldown: Record<GiftTier, number> = { 1: 0, 2: 0, 3: 0 };
+
+  /**
+   * A TikTok LIVE gift relayed by the streamer's client. The noise happens at the
+   * streamer's position; bigger gifts pull the creature harder. Cooldowns keep a
+   * gift storm from making the round unwinnable.
+   */
+  private gift(a: Extract<Action, { k: 'gift' }>, from: PlayerState) {
+    const g = this.net.game();
+    if (!g || g.phase !== 'play') return;
+    const pose = this.net.pose(from);
+    if (!pose) return;
+    const name = String(a.n ?? '').slice(0, 32) || '???';
+    const giftName = String(a.g ?? '').slice(0, 32);
+    const count = Math.max(1, Math.min(9999, Math.floor(Number(a.c) || 1)));
+    const diamonds = Math.max(0, Math.min(1e6, Math.floor(Number(a.d) || 0)));
+    let tier = giftTier(diamonds);
+    // a big gift during its cooldown still counts as a medium one
+    while (tier > 1 && this.giftCooldown[tier] > 0) tier = (tier - 1) as GiftTier;
+    // A streamer who escaped or is down can't be hunted; luring the creature to the porch
+    // or to a downed body would only camp the exit or the revive. Noise and toast still play.
+    const huntable = !g.escaped[from.id] && !g.downed[from.id];
+    const lured = huntable && this.giftCooldown[tier] <= 0;
+    if (lured) {
+      this.giftCooldown[tier] = tier === 3 ? 30 : tier === 2 ? 10 : 3;
+      this.brain.lure({ x: pose[0], y: pose[1], z: pose[2] }, tier, from.id, g);
+      if (tier === 3) this.net.fx({ k: 'sound', s: 'power', x: pose[0], y: pose[1] + 1, z: pose[2] });
+    }
+    this.net.fx({ k: 'gift', n: name, g: giftName, c: count, d: diamonds, t: tier, lured, x: pose[0], y: pose[1] + 1.2, z: pose[2] });
   }
 
   /** About a minute after the lights come back, the hall phone rings. */
@@ -290,27 +327,79 @@ class Brain {
   private alertAt: { x: number; y: number; z: number } | null = null;
   private stuckT = 0;
   private lastPos = { x: 0, z: 0 };
+  // gift lures
+  private lureT = 0;          // seconds the creature may roam even without power
+  private huntT = 0;          // seconds it locks onto the lure target
+  private revealT = 0;        // seconds it shows its true form regardless of phase
+  private lureTarget = '';
+  private spawnNear = '';     // next spawn goes close to this player
+  private spawnCap = Infinity; // caps the hidden timer for the next spawn
 
   wake() { if (this.mode === 'dormant') { this.mode = 'hidden'; this.timer = 6; } }
   adopt(c: CreatureNet, g: GameState) {
     this.net = { ...c };
+    if (!g.power && !g.exit) { this.net.m = 0; this.net.s = 0; }
     this.enraged = g.exit;
     this.mode = !g.power ? 'dormant' : c.m === 0 || c.m === 3 ? 'hidden' : 'roam';
     this.timer = 4;
   }
   enrage() { this.enraged = true; if (this.mode === 'hidden') this.timer = Math.min(this.timer, 3); }
+  /** Noise points snap to the nav graph: the creature only walks node to node, so it must be able to arrive. */
+  private noiseAt(x: number, y: number, z: number) {
+    const n = nearestNode(x, y, z);
+    return { x: n.x, y: n.y, z: n.z };
+  }
+
   alert(x: number, y: number, z: number) {
-    this.alertAt = { x, y, z };
+    this.alertAt = this.noiseAt(x, y, z);
     if (this.mode === 'hidden' || this.mode === 'dormant') { this.mode = 'hidden'; this.timer = 0.5; }
+  }
+
+  /** A gift made noise at `at`. Tier 1 draws it over, 2 makes it hunt, 3 summons its true form. */
+  lure(at: { x: number; y: number; z: number }, tier: GiftTier, target: string, g: GameState) {
+    const powered = g.power || g.exit;
+    if (tier === 1) {
+      if (!powered) return; // too faint to wake it before the lights are on
+      // a small noise: it listens, and comes back from hiding a little sooner
+      this.alertAt = this.noiseAt(at.x, at.y, at.z);
+      if (this.mode === 'hidden') this.timer = Math.max(0.5, this.timer - 5);
+    } else {
+      this.alertAt = this.noiseAt(at.x, at.y, at.z);
+      this.lureTarget = target;
+      this.huntT = Math.max(this.huntT, tier === 3 ? 20 : 15);
+      this.spawnCap = Math.min(this.spawnCap, tier === 3 ? 0.3 : 2);
+      if (tier === 3) { this.revealT = 20; this.spawnNear = target; }
+      if (!powered) this.lureT = Math.max(this.lureT, tier === 3 ? 30 : 20);
+    }
+    if (this.mode === 'dormant') { this.mode = 'hidden'; this.timer = Math.min(this.timer || 2, 2); }
+    if (this.mode === 'roam') this.repath = 0;
   }
 
   /** Returns the id of a player caught this frame, if any. */
   update(dt: number, g: GameState, seen: Seen[], net: Net): string | null {
-    if (!g.power && !g.exit) return null;
-    if (this.mode === 'dormant') this.wake();
+    this.lureT = Math.max(0, this.lureT - dt);
+    this.huntT = Math.max(0, this.huntT - dt);
+    this.revealT = Math.max(0, this.revealT - dt);
+    if (this.huntT <= 0 && this.revealT <= 0) {
+      // the gift window is over: later banishes and catches hide it for the normal time
+      this.spawnCap = Infinity;
+      this.spawnNear = '';
+    }
+    if (!g.power && !g.exit) {
+      // before the lights are on it only walks when a gift called it
+      if (this.lureT <= 0) {
+        this.mode = 'dormant';
+        this.net.m = 0; this.net.s = 0;
+        this.alertAt = null;
+        this.spawnCap = Infinity; this.spawnNear = '';
+        return null;
+      }
+    } else if (this.mode === 'dormant') this.wake();
     const live = seen.filter((s) => !s.down && !s.out);
     const c = this.net;
-    const speedMul = this.enraged ? 1.3 : 1;
+    // boosts don't stack: a summoned true form is as fast as the enraged finale, never faster
+    const speedMul = this.enraged || this.revealT > 0 ? 1.3 : this.huntT > 0 ? 1.15 : 1;
+    const trueForm = this.enraged || this.revealT > 0;
 
     // flashlight focus banishes it
     if (this.mode === 'roam' || this.mode === 'stalk' || this.mode === 'lunge') {
@@ -339,6 +428,7 @@ class Brain {
     switch (this.mode) {
       case 'hidden': {
         c.m = 0; c.s = 0;
+        if (this.timer > this.spawnCap) this.timer = this.spawnCap;
         this.timer -= dt;
         if (this.timer <= 0 && live.length) this.spawn(live, g, seen, net);
         return null;
@@ -352,6 +442,7 @@ class Brain {
       case 'stalk':
       case 'lunge': {
         if (!live.length) { this.mode = 'hidden'; this.timer = 5; return null; }
+        if (this.huntT > 0 && live.some((s) => s.id === this.lureTarget)) this.target = this.lureTarget;
         let tgt = live.find((s) => s.id === this.target);
         if (!tgt) { tgt = this.closest(live); this.target = tgt.id; }
         const dist = Math.hypot(tgt.x - c.x, tgt.z - c.z);
@@ -369,7 +460,7 @@ class Brain {
             this.target = '';
             return tgt.id;
           }
-          if (this.timer <= 0 || !sees) { this.mode = 'stalk'; c.m = this.enraged ? 2 : 1; }
+          if (this.timer <= 0 || !sees) { this.mode = 'stalk'; c.m = trueForm ? 2 : 1; }
           return null;
         }
 
@@ -379,19 +470,22 @@ class Brain {
           if (dist < LUNGE_DIST) { this.mode = 'lunge'; this.timer = 2.4; c.a++; return null; }
           // closer than a few meters it stops walking like a person
           this.moveDirect(tgt.x, tgt.z, (dist < 7 ? 1.25 : 1.9) * speedMul, dt, g);
-          c.m = this.enraged ? 2 : 1;
+          c.m = trueForm ? 2 : 1;
         } else {
           this.lostSight += dt;
           if (this.mode === 'stalk' && this.lostSight > 5) this.mode = 'roam';
-          const goal = this.alertAt ?? tgt;
+          // a gift hunt follows the streamer, not the spot where the noise was made
+          const hunting = this.huntT > 0 && tgt.id === this.lureTarget;
+          const goal = hunting ? tgt : this.alertAt ?? tgt;
           this.repath -= dt;
           if (this.repath <= 0 || !this.path.length) {
             this.path = findPath(nearestNode(c.x, c.y, c.z), nearestNode(goal.x, goal.y, goal.z), g.basement);
             this.repath = 2;
           }
           this.follow((this.mode === 'stalk' ? 1.9 : 1.45) * speedMul, dt, g);
-          if (this.alertAt && Math.hypot(this.alertAt.x - c.x, this.alertAt.z - c.z) < 1.5) this.alertAt = null;
-          c.m = this.enraged ? 2 : 1;
+          // investigated (or unreachable): forget the noise and go back to hunting people
+          if (this.alertAt && (Math.hypot(this.alertAt.x - c.x, this.alertAt.z - c.z) < 1.5 || !this.path.length)) this.alertAt = null;
+          c.m = trueForm ? 2 : 1;
         }
         // unstick: if it can't make progress, hop to the next node
         const moved = Math.hypot(c.x - this.lastPos.x, c.z - this.lastPos.z);
@@ -416,13 +510,16 @@ class Brain {
   /** Appear somewhere out of sight, wearing someone's face. */
   private spawn(live: Seen[], g: GameState, seen: Seen[], _net: Net) {
     const c = this.net;
-    const target = live[Math.floor(Math.random() * live.length)];
+    const summoned = live.find((s) => s.id === this.spawnNear);
+    const target = summoned ?? live[Math.floor(Math.random() * live.length)];
+    // a summon may appear closer than a normal spawn, but never in plain sight
+    const minDist = summoned ? 6 : 7;
     const candidates = Object.values(NAV).filter((n) => {
       if (n.gate === 'basement' && !g.basement) return false;
       if (n.y < -1 && !g.basement) return false;
       for (const s of seen) {
         const d = Math.hypot(n.x - s.x, n.z - s.z);
-        if (Math.abs(n.y - s.y) < 1.5 && (d < 7 || lineOfSight(n.x, n.z, s.x, s.z, s.y + 1))) return false;
+        if (Math.abs(n.y - s.y) < 1.5 && (d < minDist || lineOfSight(n.x, n.z, s.x, s.z, s.y + 1))) return false;
       }
       return true;
     });
@@ -433,16 +530,18 @@ class Brain {
       const dq = Math.hypot(q.x - target.x, q.z - target.z) + Math.abs(q.y - target.y) * 4;
       return dp - dq;
     });
-    const n = candidates[Math.min(candidates.length - 1, Math.floor(Math.random() * 2))];
+    const n = candidates[summoned ? 0 : Math.min(candidates.length - 1, Math.floor(Math.random() * 2))];
     c.x = n.x; c.y = n.y; c.z = n.z;
     this.target = target.id;
+    this.spawnNear = '';
+    this.spawnCap = Infinity;
     // wear the face of someone who is NOT the target, if possible
     const others = seen.filter((s) => s.id !== target.id && !s.out);
     c.d = (others.length ? others[Math.floor(Math.random() * others.length)] : target).id;
     this.mode = 'roam';
     this.path = [];
     this.repath = 0;
-    c.m = this.enraged ? 2 : 1;
+    c.m = this.enraged || this.revealT > 0 ? 2 : 1;
   }
 
   private moveDirect(tx: number, tz: number, speed: number, dt: number, g: GameState) {

@@ -62,7 +62,7 @@ export class Game {
   private flickerBurst = 0;
   private glitch = 0;
   private dread = 0;
-  private started = false;
+  started = false;
   private sensitivity = 1;
   private modelCheckT = 0;
   private ringing = false;
@@ -115,6 +115,12 @@ export class Game {
     let v = 0;
     while (used.has(v) && v < 3) v++;
     this.net.me.setState('model', v, true);
+  }
+
+  /** A gift relayed from TikFinity on this (the streamer's) machine. */
+  onTikTokGift(g: { nick: string; name: string; count: number; diamonds: number }) {
+    if (!this.started || this.net.game()?.phase !== 'play') return;
+    this.net.act({ k: 'gift', n: g.nick, g: g.name, c: g.count, d: g.diamonds });
   }
 
   async begin(withMic: boolean) {
@@ -342,6 +348,20 @@ export class Game {
             sound.speak(line, 0.9);
             this.hud.subtitle(t('phoneSub', { r: f.r ?? '' }), 7);
           }
+        }
+        break;
+      }
+      case 'gift': {
+        const vars = { n: f.n, g: f.g || 'Gift', c: f.c };
+        const key: Key = !f.lured ? 'giftQuiet' : f.t === 3 ? 'giftT3' : f.t === 2 ? 'giftT2' : 'giftT1';
+        this.hud.giftToast(t(key, vars), f.t);
+        sound.giftNoise({ x: f.x, y: f.y, z: f.z }, f.t);
+        if (f.t === 3 && f.lured) { this.flickerBurst = 3; this.glitch = 1; sound.stinger(); }
+        else if (f.t === 2) this.glitch = Math.max(this.glitch, 0.35);
+        // big gifts get an on-air dedication, read by whatever is in the radio
+        const near = Math.hypot(f.x - this.player.pos.x, f.z - this.player.pos.z) < 12 && Math.abs(f.y - 1.2 - this.player.pos.y) < 2;
+        if (f.t >= 2 && f.lured && near && !window.speechSynthesis?.speaking) {
+          sound.speak(`This one goes out to ${f.n}.`, 0.8);
         }
         break;
       }

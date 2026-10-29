@@ -101,9 +101,19 @@ export type Action =
   | { k: 'doc'; id: string }
   | { k: 'heard' }
   | { k: 'answer' }
+  | { k: 'gift'; n: string; g: string; c: number; d: number }
   | { k: 'restart' };
 
 export type Fx =
   | { k: 'toast'; key: string; n?: string; r?: string }
   | { k: 'sound'; s: string; x: number; y: number; z: number; n?: number }
-  | { k: 'scare'; s: string; n?: string; r?: string };
+  | { k: 'scare'; s: string; n?: string; r?: string }
+  // a TikTok LIVE gift landed: noise at (x,y,z), t = tier 1..3, lured = whether it moved the creature
+  | { k: 'gift'; n: string; g: string; c: number; d: number; t: GiftTier; lured: boolean; x: number; y: number; z: number };
+
+export type GiftTier = 1 | 2 | 3;
+
+/** Diamonds in one gift event -> how hard it pulls the creature. */
+export function giftTier(diamonds: number): GiftTier {
+  return diamonds >= 100 ? 3 : diamonds >= 10 ? 2 : 1;
+}
