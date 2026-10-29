@@ -75,7 +75,9 @@ export function groundY(x: number, z: number, currentY: number): number {
       return t * BASEMENT_Y;
     }
     if (z < STAIRS.zTop) return 0;
-    if (z > STAIRS.zBottom && z < 0) return BASEMENT_Y;
+    // Below the stairs is the basement landing, but its last metre (z > -1) also lies under
+    // the kitchen corner east of the stairwell: someone standing up there stays upstairs.
+    if (z > STAIRS.zBottom && z < 0) return z > -1 && currentY > BASEMENT_Y / 2 ? 0 : BASEMENT_Y;
   }
   if (z > 7) return -0.05; // porch
   return currentY < BASEMENT_Y / 2 ? BASEMENT_Y : 0;
@@ -112,9 +114,11 @@ export function wallBoxes(): Box[] {
     if (cursor < hi) pieces.push([cursor, hi]);
     for (const [s, e] of pieces) {
       const t = WALL_T / 2;
+      // overlap half a thickness only at the wall's own ends (to close corners), never into a doorway
+      const s2 = s === lo ? s - t : s, e2 = e === hi ? e + t : e;
       out.push(horizontal
-        ? { x0: s - t, x1: e + t, z0: fixed - t, z1: fixed + t, y0: w.y0, y1: w.y1, wall: true }
-        : { x0: fixed - t, x1: fixed + t, z0: s - t, z1: e + t, y0: w.y0, y1: w.y1, wall: true });
+        ? { x0: s2, x1: e2, z0: fixed - t, z1: fixed + t, y0: w.y0, y1: w.y1, wall: true }
+        : { x0: fixed - t, x1: fixed + t, z0: s2, z1: e2, y0: w.y0, y1: w.y1, wall: true });
     }
   }
   // porch railing / yard edge

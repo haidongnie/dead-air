@@ -4,7 +4,7 @@ import { loadModels, setAnisotropy } from './core/assets';
 import { Game } from './game/game';
 import { TikFinity, DEFAULT_URL, loopbackUrl, type GiftEvent, type TikState } from './game/tiktok';
 import { giftTier } from './game/state';
-import { t, lang, setLang, type Key } from './i18n';
+import { t, type Key } from './i18n';
 
 const MODELS = [
   'altar', 'barrel', 'basement_shelf', 'bookshelf', 'coat_rack', 'crt_tv', 'desk', 'dining_chair', 'dining_table',
@@ -17,13 +17,10 @@ const MODELS = [
 const $ = (id: string) => document.getElementById(id)!;
 
 function applyText() {
-  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
   document.querySelectorAll<HTMLElement>('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t as Key); });
   document.querySelectorAll<HTMLInputElement>('[data-ph]').forEach((el) => { el.placeholder = t(el.dataset.ph as Key); });
-  $('lang').textContent = lang === 'zh' ? 'EN' : '中文';
 }
 applyText();
-$('lang').onclick = () => { setLang(lang === 'zh' ? 'en' : 'zh'); applyText(); renderLobbyText(); renderTt(); };
 
 const canvas = $('scene') as HTMLCanvasElement;
 const game = new Game(canvas);
@@ -52,15 +49,8 @@ function normalizeCode(input: string): string {
   return s;
 }
 
-/** Lobby messages are kept as keys so the language button can re-render them. */
-let statusMsg: { key: Key; vars?: Record<string, string | number> } | null = null;
 function setStatus(key: Key | null, vars?: Record<string, string | number>) {
-  statusMsg = key ? { key, vars } : null;
   $('status').textContent = key ? t(key, vars) : '';
-}
-function renderLobbyText() {
-  if (invited) $('invite-hint').textContent = t('inviteFor', { code: invited });
-  if (statusMsg) $('status').textContent = t(statusMsg.key, statusMsg.vars);
 }
 
 const nameInput = $('player-name') as HTMLInputElement;
@@ -258,4 +248,8 @@ renderTt();
 
 
 // dev-only handle for inspecting the scene from the console
-if (import.meta.env.DEV) Object.assign(window as object, { __game: game, __tt: tt });
+if (import.meta.env.DEV) {
+  Promise.all([import('./world/layout'), import('./world/nav')]).then(([layout, nav]) => {
+    Object.assign(window as object, { __game: game, __tt: tt, __layout: layout, __nav: nav });
+  });
+}

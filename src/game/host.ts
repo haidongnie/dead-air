@@ -3,9 +3,8 @@ import type { Net } from './net';
 import {
   newGame, teamItems, giftTier, RELICS, ROUND_MS, type Action, type CreatureNet, type GameState, type GiftTier, type Relic,
 } from './state';
-import {
-  NAV, findPath, groundY, lineOfSight, nearestNode, resolveCircle, type NavNode,
-} from '../world/layout';
+import { NAV, groundY, lineOfSight, resolveCircle } from '../world/layout';
+import { findWay, nearestWalkable, walkableCells, type P3 } from '../world/nav';
 import { SPOTS } from '../world/house';
 
 // Host-only simulation: validates actions, advances the round, and drives the
@@ -317,7 +316,9 @@ class Brain {
   net: CreatureNet = { x: 0, y: -50, z: 0, r: 0, m: 0, d: '', s: 0, a: 0 };
   private mode: Mode = 'dormant';
   private timer = 0;
-  private path: NavNode[] = [];
+  private path: P3[] = [];          // waypoints from the grid planner
+  private planGoal: P3 | null = null;
+  private unreachable = false;
   private repath = 0;
   private target = '';
   private lostSight = 0;
@@ -325,8 +326,7 @@ class Brain {
   private publishT = 0;
   private enraged = false;
   private alertAt: { x: number; y: number; z: number } | null = null;
-  private stuckT = 0;
-  private lastPos = { x: 0, z: 0 };
+  private stuckRef = { x: 0, z: 0, t: 0 };
   // gift lures
   private lureT = 0;          // seconds the creature may roam even without power
   private huntT = 0;          // seconds it locks onto the lure target
@@ -334,6 +334,8 @@ class Brain {
   private lureTarget = '';
   private spawnNear = '';     // next spawn goes close to this player
   private spawnCap = Infinity; // caps the hidden timer for the next spawn
+  private capT = 0;           // seconds that spawn boost stays in effect
+  private focusT = 0;         // seconds it goes for the gifter (tier 1: no speed boost)
 
   wake() { if (this.mode === 'dormant') { this.mode = 'hidden'; this.timer = 6; } }
   adopt(c: CreatureNet, g: GameState) {
@@ -344,10 +346,9 @@ class Brain {
     this.timer = 4;
   }
   enrage() { this.enraged = true; if (this.mode === 'hidden') this.timer = Math.min(this.timer, 3); }
-  /** Noise points snap to the nav graph: the creature only walks node to node, so it must be able to arrive. */
-  private noiseAt(x: number, y: number, z: number) {
-    const n = nearestNode(x, y, z);
-    return { x: n.x, y: n.y, z: n.z };
+  /** Noise spots snap to the nearest place the creature can actually stand. */
+  private noiseAt(x: number, y: number, z: number): P3 {
+    return nearestWalkable({ x, y, z }) ?? { x, y, z };
   }
 
   alert(x: number, y: number, z: number) {
@@ -358,21 +359,23 @@ class Brain {
   /** A gift made noise at `at`. Tier 1 draws it over, 2 makes it hunt, 3 summons its true form. */
   lure(at: { x: number; y: number; z: number }, tier: GiftTier, target: string, g: GameState) {
     const powered = g.power || g.exit;
+    this.alertAt = this.noiseAt(at.x, at.y, at.z);
+    this.repath = 0;
+    this.lureTarget = target;
     if (tier === 1) {
-      if (!powered) return; // too faint to wake it before the lights are on
-      // a small noise: it listens, and comes back from hiding a little sooner
-      this.alertAt = this.noiseAt(at.x, at.y, at.z);
-      if (this.mode === 'hidden') this.timer = Math.max(0.5, this.timer - 5);
+      // a small noise: it comes for the gifter, soon, even before the lights are on (a short visit)
+      this.focusT = Math.max(this.focusT, 14);
+      this.spawnCap = Math.min(this.spawnCap, 6);
+      this.capT = Math.max(this.capT, 10);
+      if (!powered) this.lureT = Math.max(this.lureT, 14);
     } else {
-      this.alertAt = this.noiseAt(at.x, at.y, at.z);
-      this.lureTarget = target;
       this.huntT = Math.max(this.huntT, tier === 3 ? 20 : 15);
       this.spawnCap = Math.min(this.spawnCap, tier === 3 ? 0.3 : 2);
+      this.capT = Math.max(this.capT, this.huntT);
       if (tier === 3) { this.revealT = 20; this.spawnNear = target; }
       if (!powered) this.lureT = Math.max(this.lureT, tier === 3 ? 30 : 20);
     }
     if (this.mode === 'dormant') { this.mode = 'hidden'; this.timer = Math.min(this.timer || 2, 2); }
-    if (this.mode === 'roam') this.repath = 0;
   }
 
   /** Returns the id of a player caught this frame, if any. */
@@ -380,7 +383,9 @@ class Brain {
     this.lureT = Math.max(0, this.lureT - dt);
     this.huntT = Math.max(0, this.huntT - dt);
     this.revealT = Math.max(0, this.revealT - dt);
-    if (this.huntT <= 0 && this.revealT <= 0) {
+    this.capT = Math.max(0, this.capT - dt);
+    this.focusT = Math.max(0, this.focusT - dt);
+    if (this.capT <= 0) {
       // the gift window is over: later banishes and catches hide it for the normal time
       this.spawnCap = Infinity;
       this.spawnNear = '';
@@ -442,7 +447,7 @@ class Brain {
       case 'stalk':
       case 'lunge': {
         if (!live.length) { this.mode = 'hidden'; this.timer = 5; return null; }
-        if (this.huntT > 0 && live.some((s) => s.id === this.lureTarget)) this.target = this.lureTarget;
+        if ((this.huntT > 0 || this.focusT > 0) && live.some((s) => s.id === this.lureTarget)) this.target = this.lureTarget;
         let tgt = live.find((s) => s.id === this.target);
         if (!tgt) { tgt = this.closest(live); this.target = tgt.id; }
         const dist = Math.hypot(tgt.x - c.x, tgt.z - c.z);
@@ -451,7 +456,7 @@ class Brain {
 
         if (this.mode === 'lunge') {
           this.timer -= dt;
-          this.moveDirect(tgt.x, tgt.z, 4.6 * speedMul, dt, g);
+          this.chase(tgt, 4.6 * speedMul, dt);
           c.m = 2;
           if (dist < CATCH_DIST && Math.abs(tgt.y - c.y) < 1) {
             c.a++;
@@ -469,29 +474,21 @@ class Brain {
           if (this.mode !== 'stalk') this.mode = 'stalk';
           if (dist < LUNGE_DIST) { this.mode = 'lunge'; this.timer = 2.4; c.a++; return null; }
           // closer than a few meters it stops walking like a person
-          this.moveDirect(tgt.x, tgt.z, (dist < 7 ? 1.25 : 1.9) * speedMul, dt, g);
+          this.chase(tgt, (dist < 7 ? 1.25 : 1.9) * speedMul, dt);
           c.m = trueForm ? 2 : 1;
         } else {
           this.lostSight += dt;
           if (this.mode === 'stalk' && this.lostSight > 5) this.mode = 'roam';
           // a gift hunt follows the streamer, not the spot where the noise was made
           const hunting = this.huntT > 0 && tgt.id === this.lureTarget;
-          const goal = hunting ? tgt : this.alertAt ?? tgt;
-          this.repath -= dt;
-          if (this.repath <= 0 || !this.path.length) {
-            this.path = findPath(nearestNode(c.x, c.y, c.z), nearestNode(goal.x, goal.y, goal.z), g.basement);
-            this.repath = 2;
-          }
-          this.follow((this.mode === 'stalk' ? 1.9 : 1.45) * speedMul, dt, g);
+          const goal = hunting || !this.alertAt ? tgt : this.alertAt;
+          this.chase(goal, (this.mode === 'stalk' || hunting ? 1.9 : 1.45) * speedMul, dt);
           // investigated (or unreachable): forget the noise and go back to hunting people
-          if (this.alertAt && (Math.hypot(this.alertAt.x - c.x, this.alertAt.z - c.z) < 1.5 || !this.path.length)) this.alertAt = null;
+          const a = this.alertAt;
+          if (a && ((Math.hypot(a.x - c.x, a.z - c.z) < 1.2 && Math.abs(a.y - c.y) < 1) || (goal === a && this.unreachable))) this.alertAt = null;
           c.m = trueForm ? 2 : 1;
         }
-        // unstick: if it can't make progress, hop to the next node
-        const moved = Math.hypot(c.x - this.lastPos.x, c.z - this.lastPos.z);
-        this.stuckT = moved < 0.2 * dt ? this.stuckT + dt : 0;
-        this.lastPos = { x: c.x, z: c.z };
-        if (this.stuckT > 1.5 && this.path.length) { const n = this.path.shift()!; c.x = n.x; c.z = n.z; c.y = n.y; this.stuckT = 0; }
+        this.unstick(dt);
         return null;
       }
     }
@@ -511,26 +508,44 @@ class Brain {
   private spawn(live: Seen[], g: GameState, seen: Seen[], _net: Net) {
     const c = this.net;
     const summoned = live.find((s) => s.id === this.spawnNear);
-    const target = summoned ?? live[Math.floor(Math.random() * live.length)];
+    // a gift's ghost comes for the gifter; otherwise anyone
+    const lured = this.huntT > 0 || this.focusT > 0 ? live.find((s) => s.id === this.lureTarget) : undefined;
+    const target = summoned ?? lured ?? live[Math.floor(Math.random() * live.length)];
     // a summon may appear closer than a normal spawn, but never in plain sight
     const minDist = summoned ? 6 : 7;
-    const candidates = Object.values(NAV).filter((n) => {
-      if (n.gate === 'basement' && !g.basement) return false;
-      if (n.y < -1 && !g.basement) return false;
+    const hidden = (n: P3) => {
       for (const s of seen) {
         const d = Math.hypot(n.x - s.x, n.z - s.z);
         if (Math.abs(n.y - s.y) < 1.5 && (d < minDist || lineOfSight(n.x, n.z, s.x, s.z, s.y + 1))) return false;
       }
       return true;
-    });
-    if (!candidates.length) { this.timer = 2; return; }
-    // nearest hidden node to the target, so the encounter comes sooner rather than later
+    };
+    let candidates: P3[] = Object.values(NAV).filter((n) => (g.basement || (n.gate !== 'basement' && n.y > -1)) && hidden(n));
+    // nearest hidden spot to the target, so the encounter comes sooner rather than later
     candidates.sort((p, q) => {
       const dp = Math.hypot(p.x - target.x, p.z - target.z) + Math.abs(p.y - target.y) * 4;
       const dq = Math.hypot(q.x - target.x, q.z - target.z) + Math.abs(q.y - target.y) * 4;
       return dp - dq;
     });
-    const n = candidates[summoned ? 0 : Math.min(candidates.length - 1, Math.floor(Math.random() * 2))];
+    // only spots it can stand on (checked again after snapping) and walk from to the target
+    const pick = (list: P3[]) => {
+      const out: P3[] = [];
+      for (const n of list) {
+        const p = nearestWalkable(n);
+        if (p && hidden(p) && findWay(p, target).length) out.push(p);
+        if (out.length >= 2) break;
+      }
+      return out;
+    };
+    let usable = pick(candidates);
+    if (!usable.length) {
+      // a crowded house can hide every waypoint: fall back to any hidden walkable cell
+      const near = (p: P3) => Math.hypot(p.x - target.x, p.z - target.z) + Math.abs(p.y - target.y) * 4;
+      candidates = walkableCells().filter((p) => (g.basement || p.y > -1) && hidden(p)).sort((p, q) => near(p) - near(q));
+      usable = pick(candidates.slice(0, 40));
+    }
+    if (!usable.length) { this.timer = 2; return; }
+    const n = usable[summoned ? 0 : Math.floor(Math.random() * usable.length)];
     c.x = n.x; c.y = n.y; c.z = n.z;
     this.target = target.id;
     this.spawnNear = '';
@@ -540,11 +555,13 @@ class Brain {
     c.d = (others.length ? others[Math.floor(Math.random() * others.length)] : target).id;
     this.mode = 'roam';
     this.path = [];
+    this.planGoal = null;
     this.repath = 0;
+    this.stuckRef = { x: c.x, z: c.z, t: 0 };
     c.m = this.enraged || this.revealT > 0 ? 2 : 1;
   }
 
-  private moveDirect(tx: number, tz: number, speed: number, dt: number, g: GameState) {
+  private moveDirect(tx: number, tz: number, speed: number, dt: number) {
     const c = this.net;
     const dx = tx - c.x, dz = tz - c.z;
     const d = Math.hypot(dx, dz);
@@ -556,19 +573,50 @@ class Brain {
     c.y = groundY(c.x, c.z, c.y);
     c.r = Math.atan2(dx, dz);
     c.s = speed;
-    void g;
   }
 
-  private follow(speed: number, dt: number, g: GameState) {
+  /** Walk toward `goal` along a grid path, replanning as the goal moves. */
+  private chase(goal: P3, speed: number, dt: number) {
+    const c = this.net;
+    this.repath -= dt;
+    const pg = this.planGoal;
+    const drift = pg ? Math.hypot(goal.x - pg.x, goal.z - pg.z) + Math.abs(goal.y - pg.y) : Infinity;
+    if (this.repath <= 0 || drift > 0.75 || (!this.path.length && drift > 0.3)) {
+      this.path = findWay(c, goal);
+      this.unreachable = !this.path.length;
+      this.planGoal = { x: goal.x, y: goal.y, z: goal.z };
+      this.repath = 0.5;
+    }
+    this.follow(speed, dt);
+    // the path ends at the centre of the goal's cell: close the last few centimetres directly
+    if (!this.path.length && !this.unreachable && Math.abs(goal.y - c.y) < 1) this.moveDirect(goal.x, goal.z, speed, dt);
+  }
+
+  private follow(speed: number, dt: number) {
     const c = this.net;
     while (this.path.length) {
       const n = this.path[0];
-      if (Math.hypot(n.x - c.x, n.z - c.z) < 0.4) this.path.shift();
+      if (Math.hypot(n.x - c.x, n.z - c.z) < 0.25 && Math.abs(n.y - c.y) < 0.8) this.path.shift();
       else break;
     }
     const n = this.path[0];
     if (!n) { c.s = 0; return; }
-    this.moveDirect(n.x, n.z, speed, dt, g);
+    this.moveDirect(n.x, n.z, speed, dt);
+  }
+
+  /** A ghost doesn't stay snagged on furniture: if it hasn't got anywhere in 1.5 s, it flickers ahead. */
+  private unstick(dt: number) {
+    const c = this.net, r = this.stuckRef;
+    r.t += dt;
+    if (r.t < 1.5) return;
+    if (this.path.length && Math.hypot(c.x - r.x, c.z - r.z) < 0.35) {
+      const n = this.path[0];
+      // flicker forward along its own floor only; a waypoint on another floor means replan
+      if (Math.abs(n.y - c.y) < 0.6) { this.path.shift(); c.x = n.x; c.y = n.y; c.z = n.z; }
+      this.repath = 0;
+      this.planGoal = null;
+    }
+    this.stuckRef = { x: c.x, z: c.z, t: 0 };
   }
 
   publish(dt: number, net: Net) {

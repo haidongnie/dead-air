@@ -148,7 +148,10 @@ export function buildHouse(scene: THREE.Scene): World {
     // (extra > 0) are slightly thicker so they stand proud of the wall surface.
     const seg = (s: number, e: number, y0: number, y1: number, m: THREE.Material, extra = 0) => {
       if (e - s < 0.01 || y1 - y0 < 0.01) return;
-      const len = e - s + (extra ? 0 : WALL_T);
+      // structural pieces overlap half a thickness only at the wall's ends (closing corners),
+      // so doorways keep their full width, matching the colliders in layout.wallBoxes()
+      if (!extra) { if (s === lo) s -= WALL_T / 2; if (e === hi) e += WALL_T / 2; }
+      const len = e - s;
       const thick = WALL_T + extra;
       const c = (s + e) / 2;
       box(group, horizontal ? len : thick, y1 - y0, horizontal ? thick : len,
@@ -166,10 +169,11 @@ export function buildHouse(scene: THREE.Scene): World {
         // casing around the opening
         const cy0 = w.y0 + (o.bottom ?? 0);
         const cy1 = w.y0 + top;
-        seg(o.from - 0.09, o.from, cy0, cy1 + 0.09, M.trim, 0.06);
-        seg(o.to, o.to + 0.09, cy0, cy1 + 0.09, M.trim, 0.06);
-        seg(o.from - 0.09, o.to + 0.09, cy1, cy1 + 0.09, M.trim, 0.06);
-        if (o.bottom) seg(o.from - 0.12, o.to + 0.12, cy0 - 0.05, cy0, M.trim, 0.12);
+        // the trim wraps 4 mm into the opening so it never shares a plane with the reveal (z-fighting)
+        seg(o.from - 0.09, o.from + 0.004, cy0, cy1 + 0.09, M.trim, 0.06);
+        seg(o.to - 0.004, o.to + 0.09, cy0, cy1 + 0.09, M.trim, 0.06);
+        seg(o.from - 0.09, o.to + 0.09, cy1 - 0.004, cy1 + 0.09, M.trim, 0.06);
+        if (o.bottom) seg(o.from - 0.12, o.to + 0.12, cy0 - 0.05, cy0 + 0.004, M.trim, 0.12);
       }
     }
     seg(cursor, hi, w.y0, w.y1, mat);
@@ -467,12 +471,16 @@ export function buildHouse(scene: THREE.Scene): World {
   solid(7.75, 1.2, 0.5, 1.2, 0, 2);
 
   // --- kitchen -------------------------------------------------------------------
-  place(group, prop('fridge', { size: 1.65 }), 2.0, 0, -6.5, 0);
-  solid(2.0, -6.5, 0.85, 0.75, 0, 1.7);
-  place(group, prop('kitchen_counter', { size: 2.2, axis: 'x' }), 3.65, 0, -6.6, 0);
-  solid(3.65, -6.6, 2.2, 0.7, 0, 1.0);
-  place(group, prop('stove', { size: 0.95 }), 5.5, 0, -6.55, 0);
-  solid(5.5, -6.55, 0.8, 0.75, 0, 1.0);
+  // fridge, sink counter (under the window) and stove sit west along the north wall, leaving a
+  // ~1 m walkway to the basement door at the east end
+  // (the fridge mesh is ~1.37 m wide with its handle, so its centre stays >= 2.05 to keep it
+  // out of the hall wall; the counter is sized to fit between fridge and stove)
+  place(group, prop('fridge', { size: 1.65 }), 2.05, 0, -6.5, 0);
+  solid(2.05, -6.5, 1.2, 0.95, 0, 1.7);
+  place(group, prop('kitchen_counter', { size: 1.8, axis: 'x' }), 3.63, 0, -6.6, 0);
+  solid(3.63, -6.6, 1.8, 0.7, 0, 1.0);
+  place(group, prop('stove', { size: 0.95 }), 5.0, 0, -6.55, 0);
+  solid(5.0, -6.55, 0.8, 0.75, 0, 1.0);
   place(group, prop('dining_table', { size: 1.4, axis: 'max' }), 3.6, 0, -3.4, Math.PI / 2);
   solid(3.6, -3.4, 0.75, 1.4, 0.5, 0.85);
   for (const [x, z, r] of [[2.85, -3.4, Math.PI / 2], [4.35, -3.0, -Math.PI / 2]] as const) {

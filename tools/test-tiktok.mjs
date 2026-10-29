@@ -14,11 +14,11 @@ const timers = [];
 globalThis.performance = { now: () => now };
 globalThis.location = { hostname: 'haidongnie.github.io' };
 globalThis.localStorage = { getItem: () => null, setItem() {} };
-globalThis.navigator = { language: 'zh-CN' };
+if (!globalThis.navigator) globalThis.navigator = {}; // no permissions API in Node: the client treats it as unknown
 globalThis.window = { setInterval: (fn, ms) => { timers.push({ fn, ms, next: now + ms }); return timers.length; }, setTimeout: () => 0 };
 const advance = (ms) => { const end = now + ms; while (now < end) { now += 50; for (const t of timers) if (now >= t.next) { t.next += t.ms; t.fn(); } } };
 const { TikFinity } = await import(pathToFileURL(path.join(OUT, 'game/tiktok.js')).href);
-const { t, setLang } = await import(pathToFileURL(path.join(OUT, 'i18n.js')).href);
+const { t } = await import(pathToFileURL(path.join(OUT, 'i18n.js')).href);
 
 let id = 0;
 const gift = (o) => JSON.stringify({ event: 'gift', data: { userId: o.u ?? '1', uniqueId: 'v', nickname: o.nick ?? 'V', giftId: o.gift ?? 5655, giftName: 'Rose', diamondCount: o.d ?? 1, giftType: o.type ?? 1, repeatCount: o.n, repeatEnd: !!o.end, groupId: o.g ?? '0', msgId: o.msgId ?? String(++id) } });
@@ -69,7 +69,6 @@ all &= run('garbage and unknown events ignored', ['not json', JSON.stringify({ e
 // simulate() must not flip the state to live
 { const tt = new TikFinity(); tt.state = 'on'; tt.simulate(500); const ok = tt.state === 'on'; all &= ok; console.log(ok ? 'PASS' : 'FAIL', 'simulate keeps state', tt.state); }
 // t() inserts names literally
-setLang('en');
 { const s = t('giftT1', { n: "$'{g}$&", g: 'Rose', c: 5 }); const ok = s.startsWith("🎁 $'{g}$& sent Rose×5"); all &= ok; console.log(ok ? 'PASS' : 'FAIL', 't() literal names:', s); }
 console.log(all ? 'ALL PASS' : 'SOME FAILED');
 process.exit(all ? 0 : 1);

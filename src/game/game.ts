@@ -5,7 +5,7 @@ import { Input } from '../core/input';
 import { sound, type Emitter } from '../core/audio';
 import { buildHouse, SPOTS, type World } from '../world/house';
 import { colliders, lineOfSight, roomAt } from '../world/layout';
-import { t, DOCS, EAS_LINES, EAS_ZH, lang, type Key } from '../i18n';
+import { t, DOCS, EAS_LINES, type Key } from '../i18n';
 import { Hud } from '../ui/hud';
 import { Net } from './net';
 import { Host } from './host';
@@ -150,11 +150,11 @@ export class Game {
     this.renderer.renderer.setAnimationLoop((ts) => this.frame(ts));
     // the intro: every TV in town cuts to the emergency broadcast
     const stop = sound.eas();
-    await this.hud.eas(EAS_LINES, EAS_ZH, 11);
+    await this.hud.eas(EAS_LINES, 11);
     stop();
     sound.slam({ x: 0, y: 1, z: 7 });
     this.glitch = 1;
-    this.hud.subtitle(lang === 'zh' ? '（门在你们身后猛地关上了）' : '(The door slams shut behind you)', 4);
+    this.hud.subtitle('(The door slams shut behind you)', 4);
     this.input.lock();
   }
 
@@ -226,7 +226,7 @@ export class Game {
     sound.page();
     this.input.unlock();
     this.input.modal = (e) => { if (e.code === 'Escape' || e.code === 'KeyE') this.hud.closeModal(); };
-    this.hud.openDoc(d.title, fill(d.en), fill(d.zh));
+    this.hud.openDoc(d.title, fill(d.en));
     this.net.act({ k: 'doc', id });
   }
 
@@ -350,7 +350,7 @@ export class Game {
         else if (f.s === 'exit') { sound.stinger(); this.glitch = 1; this.flickerBurst = 3; sound.slam(SPOTS.frontDoor); }
         else if (f.s === 'respawn' && f.n === this.net.me.id) {
           this.player.respawn(0);
-          this.hud.subtitle(lang === 'zh' ? '（你挣扎着爬回了门厅……）' : '(You drag yourself back to the hall…)', 4);
+          this.hud.subtitle('(You drag yourself back to the hall…)', 4);
         }
         else if (f.s === 'phone') this.ringing = true;
         else if (f.s === 'phone-stop') this.ringing = false;
@@ -407,7 +407,7 @@ export class Game {
     w.clockCavity.visible = w.clockDoor.visible = g.clock;
     for (const [r, o] of Object.entries(w.altarItems)) o.visible = g.altar.includes(r as never);
     w.chains.visible = !g.exit;
-    if (p && !p.power && g.power) this.hud.subtitle(lang === 'zh' ? '（灯亮了。房子里某处……有脚步声。）' : '(The lights come on. Footsteps somewhere in the house.)', 5);
+    if (p && !p.power && g.power) this.hud.subtitle('(The lights come on. Footsteps somewhere in the house.)', 5);
     if (p && !p.clock && g.clock) this.glitch = 0.6;
     if (g.phase !== 'play' && (!p || p.phase === 'play' || p.round !== g.round)) this.showEnd(g);
     if (g.phase === 'play' && p?.phase !== 'play') this.hud.hideEnd();
@@ -573,7 +573,7 @@ export class Game {
       obj.rotation.y += ((open ? angle : 0) - obj.rotation.y) * Math.min(1, dt * 2.2);
     };
     swing(w.frontDoor, g.exit, -1.7);
-    swing(w.basementDoor, g.basement, -1.6);
+    swing(w.basementDoor, g.basement, 1.6); // into the stairwell landing, clear of the stove
     if (g.clock) w.clockDoor.rotation.y += (-1.9 - w.clockDoor.rotation.y) * Math.min(1, dt * 3);
     else w.clockDoor.rotation.y = 0;
     const safeBase = -0.5;

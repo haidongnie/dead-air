@@ -4,7 +4,7 @@
 
 ▶ **Play: https://haidongnie.github.io/dead-air/** (desktop browser, headphones recommended · 电脑浏览器，建议戴耳机)
 
-A 2–4 player co-op horror escape game that runs in the browser. Three.js rendering, Playroom Kit multiplayer, WebRTC proximity voice, and every model generated with the Meshy API (`meshy-t2.5` smart topology).
+A 2–4 player co-op horror escape game that runs in the browser (English UI). Three.js rendering, Playroom Kit multiplayer, WebRTC proximity voice, and every model generated with the Meshy API (`meshy-t2.5` smart topology).
 
 浏览器里的 2–4 人合作恐怖解谜逃脱游戏。Three.js 渲染、Playroom Kit 联机、WebRTC 近距离语音，所有 3D 模型由 Meshy API（`meshy-t2.5` 智能拓扑）生成。
 
@@ -42,14 +42,15 @@ Viewers' gifts make the streamer's pocket radio squawk, and the ghost comes for 
 
 | Gift (diamonds per gift event) | Effect |
 |---|---|
-| 1–9 💎 (e.g. Rose) | A noise at the streamer. The ghost walks toward it and returns from hiding sooner. 发出声响，鬼循声而来 |
+| 1–9 💎 (e.g. Rose) | A noise at the streamer. The ghost comes to it within seconds (returning from hiding early if needed, even before the lights are on). 发出声响，鬼循声而来 |
 | 10–99 💎 | The ghost hunts the streamer for 15 s, a little faster. 鬼追猎主播 15 秒 |
 | 100+ 💎 | Its true form appears near the streamer (never in plain sight) and hunts for 20 s; lights flicker. 在主播附近召唤真身 |
 
 - Combos stack: a quick Rose streak is bundled, so 12 roses in a row count as 12 💎 (tier 2). 连击会合并计算。
 - Cooldowns (3 s / 10 s / 30 s per tier) keep a gift storm from making the round unwinnable. A gift during a cooldown drops to a lower tier; it always makes a sound and shows its toast. 有冷却，刷礼物不会让游戏无法通关。
 - Big gifts get an on-air dedication ("This one goes out to …") read by the thing in the radio.
-- Before the lights are on, a 10+ 💎 gift can summon the ghost early for a short visit.
+- Before the lights are on, any gift summons the ghost early for a short visit.
+- The ghost finds its way with grid pathfinding over both floors (0.2 m cells, routed around walls, furniture and locked doors), so a lure reaches the streamer from anywhere in the house; a simulation sweep over every reachable spot measured 99.9–100% arrival, median 3–7 s.
 
 **Setup for the streamer 主播设置**
 

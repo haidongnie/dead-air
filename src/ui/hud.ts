@@ -1,4 +1,4 @@
-import { t, lang, type Key } from '../i18n';
+import { t, type Key } from '../i18n';
 
 // DOM overlay for everything that isn't the 3D view.
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -142,11 +142,9 @@ export class Hud {
     this.onModalClose();
   }
 
-  openDoc(title: string, en: string, zh: string) {
+  openDoc(title: string, body: string) {
     $('doc-title').textContent = title;
-    $('doc-body').textContent = en;
-    $('doc-trans').textContent = lang === 'zh' ? zh : '';
-    $('doc-trans').classList.toggle('hidden', lang !== 'zh');
+    $('doc-body').textContent = body;
     $('doc-close').textContent = t('close');
     this.openModal('doc');
   }
@@ -214,10 +212,9 @@ export class Hud {
   // ---------------------------------------------------------------------------
   // full-screen sequences
 
-  eas(lines: string[], zh: string, seconds: number): Promise<void> {
+  eas(lines: string[], seconds: number): Promise<void> {
     const el = $('eas');
     $('eas-lines').innerHTML = lines.map((l) => `<div>${escape(l)}</div>`).join('');
-    $('eas-zh').textContent = lang === 'zh' ? zh : '';
     el.classList.remove('hidden');
     return new Promise((res) => {
       const done = () => { el.classList.add('hidden'); removeEventListener('keydown', skip); res(); };
