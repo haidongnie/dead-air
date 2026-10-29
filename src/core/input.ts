@@ -1,4 +1,4 @@
-// Keyboard + mouse with pointer lock. Modal UI (keypad, radio, documents) takes
+// Keyboard + mouse with pointer lock. Modal UI (documents) takes
 // the keyboard by setting `modal`, which also suppresses movement.
 export class Input {
   readonly keys = new Set<string>();

@@ -24,14 +24,39 @@ export class Hud {
     $('vhs-time').classList.toggle('late', total >= 23 * 60 + 55);
   }
 
-  setObjective(text: string) {
+  /** Objective panel: step counter, title, one plain instruction and an optional checklist. */
+  setObjective(step: string, title: string, detail: string, checklist: { label: string; state: 'done' | 'have' | 'todo' }[] = []) {
     const el = $('objective');
-    if (el.dataset.text === text) return;
-    el.dataset.text = text;
-    el.textContent = text;
-    el.classList.remove('flash');
+    const key = [step, title, detail, ...checklist.map((c) => c.label + c.state)].join('|');
+    if (el.dataset.key === key) return;
+    const titleChanged = el.dataset.title !== title;
+    el.dataset.key = key;
+    el.dataset.title = title;
+    $('obj-step').textContent = step;
+    $('obj-title').textContent = title;
+    $('obj-detail').textContent = detail;
+    const list = $('obj-list');
+    list.replaceChildren(...checklist.map((c) => {
+      const li = document.createElement('li');
+      li.className = c.state;
+      li.textContent = `${c.state === 'done' ? '✓' : c.state === 'have' ? '●' : '○'} ${c.label}`;
+      return li;
+    }));
+    if (titleChanged) {
+      el.classList.remove('flash');
+      void el.offsetWidth;
+      el.classList.add('flash');
+    }
+  }
+
+  /** Big centre-screen announcement when a new step starts. */
+  banner(title: string) {
+    const el = $('banner');
+    $('banner-title').textContent = title;
+    $('banner-kicker').textContent = t('newObjective');
+    el.classList.remove('show');
     void el.offsetWidth;
-    el.classList.add('flash');
+    el.classList.add('show');
   }
 
   prompt(text: string | null, actionable: boolean, hold = 0) {
@@ -74,6 +99,11 @@ export class Hud {
     el.className = `${state === 'off' ? 'hidden ' : ''}${state}`;
     el.textContent = t(state === 'on' ? 'ttOn' : state === 'connecting' ? 'ttConnecting' : state === 'error' ? 'ttError' : 'ttOff') + (detail ? ` · ${detail}` : '');
     $('tiktok-legend').classList.toggle('hidden', state !== 'on');
+  }
+
+  clearSubtitle() {
+    this.subtitleT = 0;
+    this.subtitleEl.classList.add('hidden');
   }
 
   subtitle(text: string, seconds = 4) {
@@ -147,66 +177,6 @@ export class Hud {
     $('doc-body').textContent = body;
     $('doc-close').textContent = t('close');
     this.openModal('doc');
-  }
-
-  /** Returns a key handler for Input.modal. */
-  openKeypad(onSubmit: (code: string) => void): (e: KeyboardEvent) => void {
-    let code = '';
-    const render = () => { $('keypad-display').textContent = code.padEnd(4, '_').split('').join(' '); };
-    $('keypad-title').textContent = t('keypadTitle');
-    $('keypad-help').textContent = t('keypadHelp');
-    render();
-    this.openModal('keypad');
-    const press = (k: string) => {
-      if (/^\d$/.test(k) && code.length < 4) code += k;
-      else if (k === 'Backspace') code = code.slice(0, -1);
-      else if (k === 'Enter' && code.length === 4) { onSubmit(code); code = ''; }
-      render();
-    };
-    $('keypad-keys').onclick = (e) => {
-      const b = (e.target as HTMLElement).closest('button');
-      if (b) press(b.dataset.k!);
-    };
-    return (e: KeyboardEvent) => {
-      if (e.code === 'Escape') { this.closeModal(); return; }
-      press(e.key);
-    };
-  }
-
-  keypadResult(ok: boolean) {
-    const el = $('keypad-display');
-    el.classList.remove('ok', 'bad');
-    void el.offsetWidth;
-    el.classList.add(ok ? 'ok' : 'bad');
-  }
-
-  openTuner(get: () => number, set: (f: number) => void): (e: KeyboardEvent) => void {
-    $('tuner-title').textContent = t('radioTitle');
-    $('tuner-help').textContent = t('radioHelp');
-    this.openModal('tuner');
-    const scale = $('tuner-scale');
-    if (!scale.childElementCount) {
-      for (let f = 550; f <= 1600; f += 50) {
-        const s = document.createElement('span');
-        s.style.left = `${((f - 530) / 1170) * 100}%`;
-        s.textContent = f % 100 === 0 || f === 550 ? String(f / 10) : '';
-        s.className = f % 100 === 0 ? 'major' : '';
-        scale.appendChild(s);
-      }
-    }
-    const wheel = (e: WheelEvent) => { set(get() + Math.sign(e.deltaY) * -10); };
-    $('tuner').onwheel = wheel;
-    return (e: KeyboardEvent) => {
-      if (e.code === 'Escape') { this.closeModal(); return; }
-      if (e.code === 'KeyA' || e.code === 'ArrowLeft') set(get() - (e.shiftKey ? 50 : 10));
-      if (e.code === 'KeyD' || e.code === 'ArrowRight') set(get() + (e.shiftKey ? 50 : 10));
-    };
-  }
-
-  tuner(freq: number, signal: number) {
-    $('tuner-needle').style.left = `${((freq - 530) / 1170) * 100}%`;
-    $('tuner-freq').textContent = `${freq} kHz`;
-    ($('tuner-signal').firstElementChild as HTMLElement).style.width = `${signal * 100}%`;
   }
 
   // ---------------------------------------------------------------------------

@@ -51,17 +51,21 @@ export function newGame(round: number): GameState {
   };
 }
 
-export type Objective =
-  | 'fuses' | 'lever' | 'radio' | 'safe' | 'basement' | 'valves' | 'relics' | 'escape';
+/** The main story as a guided task list: one step at a time, always in this order. */
+export const STEPS = ['power', 'radio', 'safe', 'basement', 'valves', 'relics', 'escape'] as const;
+export type Objective = (typeof STEPS)[number];
 
 export function objective(g: GameState): Objective {
   if (g.exit) return 'escape';
-  if (!g.power) return g.installed >= 3 ? 'lever' : 'fuses';
-  if (!g.safe) return g.docs.includes('radio-heard') ? 'safe' : 'radio';
+  if (!g.power) return 'power';
+  if (!g.safe) return codeKnown(g) ? 'safe' : 'radio';
   if (!g.basement) return 'basement';
   if (!g.clock) return 'valves';
   return 'relics';
 }
+
+/** The radio has read the safe code to the team. */
+export function codeKnown(g: GameState) { return g.docs.includes('radio-heard'); }
 
 /** Items the team carries (inventory is shared). */
 export function teamItems(g: GameState) {

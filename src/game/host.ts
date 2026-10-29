@@ -1,7 +1,7 @@
 import type { PlayerState } from 'playroomkit';
 import type { Net } from './net';
 import {
-  newGame, teamItems, giftTier, RELICS, ROUND_MS, type Action, type CreatureNet, type GameState, type GiftTier, type Relic,
+  newGame, teamItems, giftTier, radioTuned, RELICS, ROUND_MS, type Action, type CreatureNet, type GameState, type GiftTier, type Relic,
 } from './state';
 import { NAV, groundY, lineOfSight, resolveCircle } from '../world/layout';
 import { findWay, nearestWalkable, walkableCells, type P3 } from '../world/nav';
@@ -67,6 +67,13 @@ export class Host {
         g.installed = Math.min(3, g.installed + items.fuses);
         this.net.fx({ k: 'toast', key: 'tInstalled', n });
         this.net.fx({ k: 'sound', s: 'click', ...at(SPOTS.fuseBox) });
+        // the last fuse throws the switch too: one press, no separate lever step
+        if (g.installed >= 3 && !g.power) {
+          g.power = true;
+          this.net.fx({ k: 'sound', s: 'power', ...at(SPOTS.fuseBox) });
+          this.net.fx({ k: 'toast', key: 'tPower' });
+          this.brain.wake();
+        }
         break;
       }
       case 'lever': {
@@ -80,6 +87,10 @@ export class Host {
       case 'tune': {
         if (!g.power) return;
         g.radio = Math.max(530, Math.min(1700, Math.round(a.f)));
+        if (Math.abs(g.radio - g.freq) <= 5 && !g.docs.includes('radio-heard')) {
+          g.docs.push('radio-heard');
+          this.net.fx({ k: 'toast', key: 'tCode', n });
+        }
         break;
       }
       case 'safe': {
@@ -135,6 +146,8 @@ export class Host {
         break;
       }
       case 'heard': {
+        // a reading still playing from the previous round must not reveal this round's code
+        if (!radioTuned(g)) return;
         if (!g.docs.includes('radio-heard')) g.docs.push('radio-heard');
         break;
       }

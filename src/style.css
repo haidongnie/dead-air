@@ -93,12 +93,39 @@ button { font: inherit; cursor: pointer; }
 #hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; font-family: var(--mono); text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 2px #000; }
 #vhs { position: absolute; top: 18px; left: 22px; font-size: 26px; line-height: 1.05; letter-spacing: 1px; color: #f2efe8; }
 #vhs-time.late { color: var(--red); animation: blink 1s steps(2) infinite; }
+/* the task panel and the TikTok gift feed stack in one column so they never overlap */
+#rightcol { position: absolute; top: 20px; right: 22px; max-height: calc(100% - 220px); display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+#objective { flex-shrink: 0; }
+/* a long gift streak is cut at the bottom (oldest toasts) instead of running into the items/beam box */
+#giftcol { min-height: 0; overflow-y: clip; }
 #objective {
-  position: absolute; top: 20px; right: 22px; max-width: min(420px, 45vw); text-align: right; font-family: var(--type); font-size: 16px; line-height: 1.4;
-  padding: 8px 12px; background: rgba(0,0,0,0.35); border-right: 3px solid var(--amber);
+  width: min(400px, 46vw); box-sizing: border-box; text-align: right; font-family: var(--type);
+  padding: 10px 14px; background: rgba(0,0,0,0.45); border-right: 3px solid var(--amber);
 }
+#obj-step { font-family: var(--mono); font-size: 16px; letter-spacing: 3px; color: var(--amber); }
+#obj-title { font-family: var(--mono); font-size: 28px; line-height: 1; color: #fff; margin: 2px 0 6px; letter-spacing: 1px; }
+#obj-detail { font-size: 15px; line-height: 1.4; color: #e8e2d4; }
+#obj-list { list-style: none; margin: 6px 0 0; padding: 0; font-size: 14px; line-height: 1.5; }
+#obj-list .done { color: #7d7; } #obj-list .have { color: var(--amber); } #obj-list .todo { color: var(--dim); }
+/* objective waypoints */
+#markers { position: absolute; inset: 0; overflow: hidden; }
+.marker { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.marker .pin { position: absolute; left: -7px; top: -7px; width: 14px; height: 14px; border: 2px solid var(--amber); transform: rotate(45deg); background: rgba(255,176,74,0.25); box-shadow: 0 0 12px rgba(255,176,74,0.6); animation: pin 1.4s ease-in-out infinite; }
+.marker .arrow { display: none; position: absolute; left: -12px; top: -12px; width: 24px; height: 24px; }
+.marker .arrow::before { content: ''; position: absolute; left: 6px; top: 4px; border-left: 14px solid var(--amber); border-top: 8px solid transparent; border-bottom: 8px solid transparent; filter: drop-shadow(0 0 4px rgba(255,176,74,0.7)); }
+.marker.edge .pin { display: none; } .marker.edge .arrow { display: block; }
+.marker .lbl { position: absolute; left: 0; top: 14px; transform: translateX(-50%); white-space: nowrap; font-family: var(--mono); font-size: 17px; color: #ffd9a0; background: rgba(0,0,0,0.5); padding: 0 6px; }
+.marker.edge .lbl { top: 16px; }
+.marker.al-l .lbl { transform: translateX(-12px); } .marker.al-r .lbl { transform: translateX(calc(-100% + 12px)); }
+@keyframes pin { 50% { transform: rotate(45deg) scale(1.25); } }
+/* new objective banner */
+#banner { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); text-align: center; opacity: 0; pointer-events: none; }
+#banner.show { animation: banner 4s ease-out forwards; }
+#banner-kicker { font-family: var(--mono); font-size: 20px; letter-spacing: 6px; color: var(--amber); }
+#banner-title { font-family: var(--mono); font-size: clamp(36px, 6vw, 60px); color: #fff; letter-spacing: 3px; text-shadow: 2px 0 rgba(255,0,40,0.6), -2px 0 rgba(0,200,255,0.4); }
+@keyframes banner { 0% { opacity: 0; transform: translate(-50%, 10px); } 10%, 75% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
 #objective.flash { animation: obj 1.6s ease-out; }
-@keyframes obj { 0% { background: rgba(255, 176, 74, 0.45); } 100% { background: rgba(0,0,0,0.35); } }
+@keyframes obj { 0% { background: rgba(255, 176, 74, 0.45); } 100% { background: rgba(0,0,0,0.45); } }
 #toprow { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; font-size: 18px; color: var(--dim); pointer-events: auto; }
 #room-code { color: var(--ink); font-size: 22px; letter-spacing: 2px; }
 #room-code b { color: var(--amber); font-weight: normal; letter-spacing: 4px; }
@@ -110,12 +137,12 @@ button { font: inherit; cursor: pointer; }
 kbd { display: inline-block; font-family: var(--mono); font-size: 18px; border: 1px solid var(--ink); border-radius: 3px; padding: 0 6px; margin-right: 4px; background: rgba(0,0,0,0.5); }
 #holdbar { position: absolute; left: 50%; top: calc(50% + 56px); width: 160px; height: 4px; margin-left: -80px; background: rgba(255,255,255,0.15); }
 #holdbar i, .bar i { display: block; height: 100%; width: 0; background: var(--amber); }
-#toasts { position: absolute; left: 22px; top: 130px; display: flex; flex-direction: column; gap: 6px; font-family: var(--type); font-size: 15px; max-width: 380px; }
+#toasts { position: absolute; left: 22px; top: 130px; display: flex; flex-direction: column; gap: 6px; font-family: var(--type); font-size: 15px; max-width: min(380px, calc(54vw - 50px)); }
 .toast { background: rgba(0,0,0,0.45); padding: 5px 10px; border-left: 3px solid var(--red); animation: tin 0.3s ease-out; transition: opacity 1s; }
 .toast.out { opacity: 0; }
 @keyframes tin { from { transform: translateX(-20px); opacity: 0; } }
 /* TikTok LIVE gift feed */
-#giftcol { position: absolute; right: 22px; top: 96px; width: min(360px, 40vw); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+#giftcol { width: min(360px, 40vw); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 #tiktok { font-size: 17px; padding: 1px 10px; border: 1px solid #444; background: rgba(0,0,0,0.45); }
 #tiktok.on { color: #25f4ee; border-color: #25f4ee; }
 #tiktok.connecting { color: var(--amber); }
@@ -160,24 +187,6 @@ body { --dg: calc(var(--danger) * 1px); }
 .paper h3 { margin: 0 0 14px; font-size: 15px; letter-spacing: 1px; color: #5a4a30; text-transform: uppercase; }
 .paper pre { white-space: pre-wrap; font-family: var(--type); font-size: 16px; line-height: 1.6; margin: 0; }
 .close { font-family: var(--mono); font-size: 18px; opacity: 0.7; margin: 18px 0 0; text-align: center; }
-.device { background: #14110e; border: 2px solid #4a3a28; padding: 24px; width: min(420px, 100%); text-align: center; box-shadow: 0 0 40px rgba(0,0,0,0.9); font-family: var(--mono); }
-.device h3 { margin: 0 0 14px; font-weight: normal; font-size: 22px; color: var(--amber); letter-spacing: 1px; }
-#keypad-display { font-size: 52px; letter-spacing: 6px; background: #0a1a0a; color: #7dff7d; padding: 6px; margin-bottom: 14px; text-shadow: 0 0 10px #3f3; }
-#keypad-display.bad { animation: bad 0.5s; color: #ff4a4a; text-shadow: 0 0 10px #f33; }
-#keypad-display.ok { color: #fff; }
-@keyframes bad { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
-#keypad-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-#keypad-keys button { font-family: var(--mono); font-size: 30px; padding: 8px; background: #2a241c; color: var(--ink); border: 1px solid #5a4a38; }
-#keypad-keys button:active { background: #4a3a28; }
-#tuner-dial { position: relative; height: 64px; background: linear-gradient(#3a2008, #1a0e04); border: 1px solid #6a4a20; margin-bottom: 10px; overflow: hidden; box-shadow: inset 0 0 30px rgba(255, 140, 40, 0.35); }
-#tuner-scale span { position: absolute; top: 6px; width: 1px; height: 14px; background: #d8a050; font-size: 16px; color: #ffcf8a; }
-#tuner-scale span.major { height: 22px; }
-#tuner-scale span::after { content: attr(data-l); }
-#tuner-scale span { text-indent: -10px; line-height: 70px; }
-#tuner-needle { position: absolute; top: 0; bottom: 0; width: 2px; background: #ff3a10; box-shadow: 0 0 8px #f40; transition: left 0.1s; }
-#tuner-freq { font-size: 34px; color: var(--amber); }
-#tuner-signal { margin: 8px 0; height: 8px; }
-#tuner-signal i { background: #7dff7d; }
 
 /* ---------- EAS ---------- */
 #eas { position: fixed; inset: 0; z-index: 25; background: #0a1a8a; color: #fff; font-family: var(--mono); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 16px; text-align: center; animation: easflick 0.12s infinite; }
@@ -208,10 +217,12 @@ body { --dg: calc(var(--danger) * 1px); }
 
 @media (max-width: 700px) {
   #vhs { font-size: 20px; top: 12px; left: 12px; }
-  #objective { font-size: 13px; top: 12px; right: 12px; }
+  #rightcol { top: 12px; right: 12px; }
+  #obj-title { font-size: 22px; } #obj-detail { font-size: 13px; } #obj-list { font-size: 12px; }
   #team, #inv { bottom: 12px; font-size: 16px; }
   #team { left: 12px; } #inv { right: 12px; width: 160px; }
-  #toprow { top: 84px; }
-  #toasts { top: 118px; }
-  #giftcol { top: 76px; right: 12px; width: 55vw; }
+  /* keep the left-hand stack clear of the task panel (46vw + margins) */
+  #toprow { top: 84px; max-width: calc(52vw - 34px); flex-wrap: wrap; row-gap: 2px; }
+  #toasts { top: 140px; max-width: calc(52vw - 34px); }
+  #giftcol { width: 55vw; }
 }

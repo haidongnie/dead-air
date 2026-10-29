@@ -12,7 +12,8 @@ import { Host } from './host';
 import { LocalPlayer } from './player';
 import { RemoteAvatar, CreatureView } from './avatars';
 import { Voice } from './voice';
-import { objective, radioTuned, teamItems, ROUND_MS, type Fx, type GameState, type Objective } from './state';
+import { codeKnown, objective, radioTuned, teamItems, RELICS, ROUND_MS, STEPS, type Fx, type GameState, type Relic } from './state';
+import { Markers, type Target } from '../ui/markers';
 
 interface Interactable {
   id: string;
@@ -24,10 +25,6 @@ interface Interactable {
   hold?: 'a' | 'b';
 }
 
-const OBJ_KEY: Record<Objective, Key> = {
-  fuses: 'objFuses', lever: 'objLever', radio: 'objRadio', safe: 'objSafe',
-  basement: 'objBasement', valves: 'objValves', relics: 'objRelics', escape: 'objEscape',
-};
 const DIGITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 
 export class Game {
@@ -68,6 +65,8 @@ export class Game {
   private ringing = false;
   private escapedSent = false;
   private dust!: THREE.Points;
+  private markers = new Markers(document.getElementById('markers')!);
+  private shownStep = '';
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new Renderer(canvas, this.scene, this.camera);
@@ -179,20 +178,29 @@ export class Game {
       pick('doll', 'takeDoll'), pick('watch', 'takeWatch', (g) => g.clock),
       {
         id: 'fusebox', pos: SPOTS.fuseBox,
-        prompt: (g) => g.power ? null : g.installed >= 3 ? t('throwLever') : teamItems(g).fuses > 0 ? t('installFuses') : `${t('needFuses')} (${g.installed}/3)`,
+        prompt: (g) => {
+          if (g.power) return null;
+          const have = teamItems(g).fuses;
+          if (g.installed >= 3) return t('throwLever');
+          if (!have) return `${t('needFuses')} (${g.installed}/3)`;
+          return g.installed + have >= 3 ? t('restorePower') : t('installFuses');
+        },
         actionable: (g) => g.installed >= 3 || teamItems(g).fuses > 0,
+        // the host throws the switch itself once the third fuse is in
         use: (g) => act(g.installed >= 3 ? { k: 'lever' } : { k: 'install' }),
       },
       {
         id: 'radio', pos: SPOTS.radio,
-        prompt: (g) => (g.power ? t('useRadio') : t('noPower')),
-        actionable: (g) => g.power,
-        use: () => this.openTuner(),
+        prompt: (g) => (!g.power ? t('noPower') : radioTuned(g) ? t('radioPlaying') : t('useRadio')),
+        actionable: (g) => g.power && !radioTuned(g),
+        // it finds the station by itself and reads the safe code to everyone nearby
+        use: (g) => { sound.click(undefined, 600); act({ k: 'tune', f: g.freq }); },
       },
       {
         id: 'safe', pos: SPOTS.safe,
-        prompt: (g) => (g.safe ? null : t('useSafe')),
-        use: () => this.openKeypad(),
+        prompt: (g) => (g.safe ? null : g.power && codeKnown(g) ? t('enterCode', { code: g.code }) : t('safeNeedCode')),
+        actionable: (g) => g.power && codeKnown(g),
+        use: (g) => { sound.beep(true); act({ k: 'safe', code: g.code }); },
       },
       doc('journal', SPOTS.journal, (g) => g.safe),
       { id: 'clock', pos: SPOTS.clock, prompt: (g) => (g.clock ? null : t('clockClosed')), actionable: () => false },
@@ -229,34 +237,6 @@ export class Game {
     this.hud.openDoc(d.title, fill(d.en));
     this.net.act({ k: 'doc', id });
   }
-
-  private openKeypad() {
-    this.input.unlock();
-    this.input.modal = this.hud.openKeypad((code) => {
-      this.net.act({ k: 'safe', code });
-      const g = this.net.game();
-      const ok = g?.code === code;
-      sound.beep(ok);
-      this.hud.keypadResult(ok);
-      if (ok) setTimeout(() => this.hud.closeModal(), 700);
-    });
-  }
-
-  private tunerFreq = 1010;
-  private openTuner() {
-    this.input.unlock();
-    this.tunerFreq = this.net.game()?.radio ?? 1010;
-    let sendT = 0;
-    this.input.modal = this.hud.openTuner(() => this.tunerFreq, (f) => {
-      this.tunerFreq = Math.max(530, Math.min(1700, f));
-      sound.click(undefined, 600);
-      const now = performance.now();
-      if (now - sendT > 120) { sendT = now; this.net.act({ k: 'tune', f: this.tunerFreq }); }
-      clearTimeout(this.tuneDebounce);
-      this.tuneDebounce = window.setTimeout(() => this.net.act({ k: 'tune', f: this.tunerFreq }), 150);
-    });
-  }
-  private tuneDebounce = 0;
 
   private updateInteraction(dt: number, g: GameState, me: { downed: boolean; escaped: boolean }) {
     const eye = this.player.eye;
@@ -393,6 +373,10 @@ export class Game {
         this.player.respawn(Math.max(0, idx));
         this.escapedSent = false;
         this.ringing = false;
+        sound.stopSpeech();
+        this.hud.clearSubtitle();
+        this.radioVoiceBusy = false;
+        this.radioVoiceCooldown = 0;
         this.input.lock();
       }
     }
@@ -663,14 +647,13 @@ export class Game {
     const tuned = radioTuned(g);
     const near = Math.abs(g.radio - g.freq);
     this.radioStatic!.set(!g.power ? 0 : tuned ? 0.04 : 0.12 + Math.min(1, near / 200) * 0.15);
-    if (this.hud.modalOpen) this.hud.tuner(this.tunerFreq, g.power ? Math.max(0, 1 - near / 120) : 0);
     this.radioVoiceCooldown -= dt;
     const dRadio = this.player.pos.distanceTo(SPOTS.radio);
-    if (tuned && !this.radioVoiceBusy && this.radioVoiceCooldown <= 0 && dRadio < 7.5 && Math.abs(this.player.pos.y) < 1) {
+    if (tuned && g.phase === 'play' && !this.radioVoiceBusy && this.radioVoiceCooldown <= 0 && dRadio < 7.5 && Math.abs(this.player.pos.y) < 1) {
       this.radioVoiceBusy = true;
       const d = g.code.split('').map(Number);
       const spoken = `Ruth. ${DIGITS[d[0]]}. Annie. ${DIGITS[d[1]]}. Elias. ${DIGITS[d[2]]}. Home. ${DIGITS[d[3]]}.`;
-      this.hud.subtitle(t('radioSub', { a: d[0], b: d[1], c: d[2], d: d[3] }) + ' ' + t('ttsHint'), 12);
+      this.hud.subtitle(t('radioSub', { a: d[0], b: d[1], c: d[2], d: d[3] }) + (g.safe ? '' : ' ' + t('ttsHint')), 12);
       sound.speak(spoken, Math.max(0.3, 1 - dRadio / 8), () => {
         this.radioVoiceBusy = false;
         this.radioVoiceCooldown = 4;
@@ -681,10 +664,67 @@ export class Game {
     }
   }
 
+  /** Guided task list: what to do now, where it is (waypoints), and a banner when the step changes. */
+  private updateObjective(g: GameState, downed: boolean, escaped: boolean) {
+    const obj = objective(g);
+    const step = t('stepOf', { n: STEPS.indexOf(obj) + 1, total: STEPS.length });
+    const items = teamItems(g);
+    const fusesFound = g.picked.filter((p) => p.startsWith('f')).length;
+    const list: { label: string; state: 'done' | 'have' | 'todo' }[] = [];
+    const targets: Target[] = [];
+    const mark = (pos: THREE.Vector3, key: Key) => targets.push({ pos, label: t(key) });
+    let detail = '';
+    switch (obj) {
+      case 'power':
+        detail = fusesFound >= 3 ? t('objd_powerReady') : t('objd_power', { n: fusesFound });
+        (['f1', 'f2', 'f3'] as const).forEach((f, i) => {
+          if (!g.picked.includes(f)) mark(SPOTS[`fuse${i + 1}` as 'fuse1'], 'mk_fuse');
+        });
+        if (items.fuses > 0 || fusesFound >= 3) mark(SPOTS.fuseBox, 'mk_fusebox');
+        break;
+      case 'radio': detail = t('objd_radio'); mark(SPOTS.radio, 'mk_radio'); break;
+      case 'safe': detail = t('objd_safe', { code: g.code }); mark(SPOTS.safe, 'mk_safe'); break;
+      case 'basement':
+        if (!g.picked.includes('key')) { detail = t('objd_basementKey'); mark(SPOTS.key, 'mk_key'); }
+        else { detail = t('objd_basementDoor'); mark(SPOTS.basementDoor, 'mk_bdoor'); }
+        break;
+      case 'valves': {
+        const solo = [...this.net.players.keys()].filter((id) => !g.escaped[id]).length <= 1;
+        detail = t(solo ? 'objd_valvesSolo' : 'objd_valves');
+        mark(SPOTS.valveA, 'mk_valve'); mark(SPOTS.valveB, 'mk_valve');
+        break;
+      }
+      case 'relics': {
+        detail = t('objd_relics');
+        const where: Record<Relic, THREE.Vector3> = { musicbox: SPOTS.musicbox, doll: SPOTS.doll, watch: SPOTS.watch };
+        for (const r of RELICS) {
+          const state = g.altar.includes(r) ? 'done' : g.picked.includes(r) ? 'have' : 'todo';
+          list.push({ label: t(`mk_${r}` as Key), state });
+          if (state === 'todo') mark(where[r], `mk_${r}` as Key);
+        }
+        if (items.relics.length) mark(SPOTS.altar, 'mk_altar');
+        break;
+      }
+      case 'escape': detail = t('objd_escape'); mark(SPOTS.frontDoor, 'mk_exit'); break;
+    }
+    if (obj === 'power') list.push({ label: `${t('mk_fuse')} ${fusesFound}/3`, state: fusesFound >= 3 ? 'done' : 'todo' });
+    if (downed) this.hud.setObjective(step, t(`obj_${obj}` as Key), t('objDowned'), list);
+    else if (escaped) this.hud.setObjective('', t('obj_escape'), t('objWaiting'));
+    else this.hud.setObjective(step, t(`obj_${obj}` as Key), detail, list);
+    // waypoints only while you can act on them
+    if (downed || escaped || this.hud.modalOpen || g.phase !== 'play') this.markers.hide();
+    else this.markers.update(this.camera, targets, this.player.pos);
+    const stepKey = `${g.round}:${obj}`;
+    if (stepKey !== this.shownStep) {
+      if (this.shownStep && g.phase === 'play') { this.hud.banner(t(`obj_${obj}` as Key)); sound.chime(this.player.eye, 1); }
+      this.shownStep = stepKey;
+    }
+  }
+
   private updateHud(g: GameState, downed: boolean, escaped: boolean) {
     const elapsed = g.phase === 'play' ? Date.now() - g.t0 : (g.endAt ?? Date.now()) - g.t0;
     this.hud.setClock(Math.min(elapsed, ROUND_MS));
-    this.hud.setObjective(downed ? t('objDowned') : escaped ? t('objWaiting') : t(OBJ_KEY[objective(g)]));
+    this.updateObjective(g, downed, escaped);
     const rows = [...this.net.players.values()].map((p) => ({
       id: p.id, name: this.net.name(p), color: this.net.color(p), you: p.id === this.net.me.id,
       down: !!g.downed[p.id], out: !!g.escaped[p.id], speaking: this.voice.level(p.id) > 0.03,

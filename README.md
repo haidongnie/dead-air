@@ -27,7 +27,15 @@ Something in the house wears your friends' faces.
 | Right mouse | Focus beam: hold it on the monster to drive it off (limited charge) · 聚光驱魔 |
 | M | Mute mic · 静音 |
 
-**Objectives 目标链**: find 3 fuses → throw the switch → tune the parlor radio to the frequency written in the study → the radio reads the 4-digit safe code → safe holds the basement key and the music box → **two players turn the two basement valves at the same time** → the grandfather clock opens → place the music box, doll and pocket watch on the altar → run out the front door.
+**Guided story tasks 主线任务（无需解谜）**: no puzzles to work out. The top-right panel always shows the current task (STEP n/7) with a short instruction, and on-screen waypoints show where to go, with the distance and "upstairs/downstairs". A banner announces each new task. 右上角始终显示当前任务和说明，屏幕上的路标指向目标位置并显示距离和楼层，每完成一步会弹出新任务提示。
+
+1. **Restore the power** · collect 3 fuses, press E at the fuse box (power comes on by itself) · 收集 3 个保险丝，在厨房保险盒按 E
+2. **Listen to the radio** · press E on the parlor radio; it finds the station and reads the safe code · 在客厅收音机按 E，它会自动播出保险箱密码
+3. **Open the safe** · the code is shown in the task panel; press E at the study safe · 密码直接显示在任务栏，在书房保险箱按 E
+4. **Get into the basement** · take the key from the safe, unlock the kitchen basement door · 拿钥匙，开地下室门
+5. **Turn the valves** · co-op: two players hold E on the two valves together; solo: hold one valve · 多人两人同时按住两个阀门；单人按住一个即可
+6. **Bring the family home** · carry the music box, doll and pocket watch to the basement altar (checklist in the panel) · 把三件遗物放上地下室祭坛（任务栏有清单）
+7. **Get out!** · run out the front door · 从前门逃出
 
 **The mimic 拟态怪**: after the power comes back, the monster walks the house disguised as one of your teammates: same character, same name tag. Tells: it carries no light, makes no footsteps, walks a little too slowly, and its eyes catch your flashlight. With proximity voice on, it can replay what your friends said earlier, locally on your device. If it gets close it reveals its true form (a preacher with a 1950s radio for a head) and lunges. Caught players go down; a teammate holds E to pull them up. Solo players crawl back to the hall after a few seconds.
 

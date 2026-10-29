@@ -68,13 +68,17 @@
   <!-- in-game HUD -->
   <section id="hud" class="hidden">
     <div id="vhs"><span class="dot"></span> PLAY ▶<br /><span>OCT. 31 1983</span><br /><span id="vhs-time">11:35:00 PM</span></div>
-    <div id="objective"></div>
+    <div id="rightcol">
+      <div id="objective"><div id="obj-step"></div><div id="obj-title"></div><div id="obj-detail"></div><ul id="obj-list"></ul></div>
+      <div id="giftcol"><span id="tiktok" class="hidden"></span><div id="tiktok-legend" class="hidden" data-t="ttTiers"></div><div id="gifts"></div></div>
+    </div>
+    <div id="markers"></div>
+    <div id="banner"><div id="banner-kicker"></div><div id="banner-title"></div></div>
     <div id="toprow"><span id="room-code"></span><button id="invite" data-t="invite"></button><span id="mic"></span></div>
     <div id="crosshair"></div>
     <div id="prompt" class="hidden"></div>
     <div id="holdbar" class="hidden"><i></i></div>
     <div id="toasts"></div>
-    <div id="giftcol"><span id="tiktok" class="hidden"></span><div id="tiktok-legend" class="hidden" data-t="ttTiers"></div><div id="gifts"></div></div>
     <div id="subtitle" class="hidden"></div>
     <div id="team"></div>
     <div id="inv">
@@ -91,24 +95,6 @@
       <h3 id="doc-title"></h3>
       <pre id="doc-body"></pre>
       <p id="doc-close" class="close"></p>
-    </div>
-    <div id="keypad" class="device hidden">
-      <h3 id="keypad-title"></h3>
-      <div id="keypad-display">_ _ _ _</div>
-      <div id="keypad-keys">
-        <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
-        <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
-        <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
-        <button data-k="Backspace">⌫</button><button data-k="0">0</button><button data-k="Enter">↵</button>
-      </div>
-      <p id="keypad-help" class="close"></p>
-    </div>
-    <div id="tuner" class="device hidden">
-      <h3 id="tuner-title"></h3>
-      <div id="tuner-dial"><div id="tuner-scale"></div><div id="tuner-needle"></div></div>
-      <div id="tuner-freq">1010 kHz</div>
-      <div id="tuner-signal" class="bar"><i></i></div>
-      <p id="tuner-help" class="close"></p>
     </div>
   </section>
 
