@@ -4,13 +4,18 @@
 // Usage:
 //   node tools/mock-tikfinity.mjs            # replay the scripted test sequence once per connection
 //   node tools/mock-tikfinity.mjs --random 8 # also send a random gift every 8 seconds
+//   node tools/mock-tikfinity.mjs --binary   # send JSON in binary frames instead of text
+//   node tools/mock-tikfinity.mjs --notlive  # TikFinity open but "Disconnected": greeting only, no LIVE events
 //
 // Payloads follow the flat TikTok-Live-Connector v1 shape that TikFinity sends.
 import { WebSocketServer } from 'ws';
 
 const PORT = Number(process.env.PORT || 21213);
 const randomEvery = process.argv.includes('--random') ? Number(process.argv[process.argv.indexOf('--random') + 1] || 8) : 0;
+const binary = process.argv.includes('--binary');
+const notLive = process.argv.includes('--notlive');
 const wss = new WebSocketServer({ port: PORT });
+const out = (ws, text) => ws.send(binary ? Buffer.from(text) : text);
 let seq = 0;
 
 const viewer = (n) => ({
@@ -58,11 +63,19 @@ wss.on('connection', (ws, req) => {
   console.log(`client connected from ${req.headers.origin ?? 'unknown origin'}`);
   let cancelled = false;
   ws.on('close', () => { cancelled = true; console.log('client disconnected'); });
+  // like TikFinity: greet every client, answer pings
+  out(ws, JSON.stringify({ event: 'config', data: { version: 'mock', language: 'en' } }));
+  ws.on('message', (m) => { if (String(m).includes('"ping"')) out(ws, JSON.stringify({ event: 'pong' })); });
+  if (notLive) {
+    out(ws, JSON.stringify({ event: 'liveStatusChange', data: { isLive: false } }));
+    console.log('sent: config + liveStatusChange(isLive=false); no LIVE events in --notlive mode');
+    return;
+  }
   (async () => {
     for (const [delay, msg, label] of script()) {
       await new Promise((r) => setTimeout(r, delay));
       if (cancelled) return;
-      ws.send(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      out(ws, typeof msg === 'string' ? msg : JSON.stringify(msg));
       console.log('sent:', label);
     }
     console.log('script done');
@@ -71,9 +84,9 @@ wss.on('connection', (ws, req) => {
     const timer = setInterval(() => {
       if (cancelled) return clearInterval(timer);
       const pick = [[5655, 'Rose', 1], [5827, 'Hand Heart', 100], [6064, 'GG', 1], [5760, 'Weights', 1], [7934, 'Heart Me', 1], [6267, 'Corgi', 299]][Math.floor(Math.random() * 6)];
-      ws.send(JSON.stringify(gift(viewer(Math.floor(Math.random() * 4)), { giftId: pick[0], giftName: pick[1], diamondCount: pick[2], giftType: 2, repeatCount: 1, repeatEnd: true })));
+      out(ws, JSON.stringify(gift(viewer(Math.floor(Math.random() * 4)), { giftId: pick[0], giftName: pick[1], diamondCount: pick[2], giftType: 2, repeatCount: 1, repeatEnd: true })));
       console.log('sent random:', pick[1]);
     }, randomEvery * 1000);
   }
 });
-console.log(`mock TikFinity listening on ws://localhost:${PORT}/`);
+console.log(`mock TikFinity listening on ws://localhost:${PORT}/${binary ? ' (binary frames)' : ''}`);

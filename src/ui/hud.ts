@@ -68,10 +68,11 @@ export class Hud {
     while (box.children.length > 6) box.lastElementChild!.remove();
   }
 
-  tiktok(state: 'off' | 'connecting' | 'on' | 'error') {
+  /** detail: "frames / gifts" so the streamer can see on stream that events are arriving */
+  tiktok(state: 'off' | 'connecting' | 'on' | 'error', detail = '') {
     const el = $('tiktok');
     el.className = `${state === 'off' ? 'hidden ' : ''}${state}`;
-    el.textContent = t(state === 'on' ? 'ttOn' : state === 'connecting' ? 'ttConnecting' : state === 'error' ? 'ttError' : 'ttOff');
+    el.textContent = t(state === 'on' ? 'ttOn' : state === 'connecting' ? 'ttConnecting' : state === 'error' ? 'ttError' : 'ttOff') + (detail ? ` · ${detail}` : '');
     $('tiktok-legend').classList.toggle('hidden', state !== 'on');
   }
 

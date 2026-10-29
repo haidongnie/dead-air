@@ -42,6 +42,30 @@ all &= run('duplicate msgId ignored', [gift({ n: 1, end: true, msgId: 'x' }), gi
 all &= run('non-streak gifts with groupId 0 each count', [gift({ n: 1, type: 2, d: 30 }), gift({ n: 1, type: 2, d: 30 })], [[1, 30], [1, 30]]);
 all &= run('two interleaved viewers', [gift({ n: 1, u: 'a' }), gift({ n: 1, u: 'b' }), gift({ n: 2, u: 'a' }), gift({ n: 2, u: 'b', end: true }), gift({ n: 3, u: 'a', end: true })], [[3, 3], [2, 2]]);
 all &= run('garbage and unknown events ignored', ['not json', JSON.stringify({ event: 'like', data: {} }), JSON.stringify({ event: 'gift' })], []);
+// connection status: TikFinity's own greeting must not read as "receiving LIVE events"
+{
+  const sockets = [];
+  globalThis.WebSocket = class { constructor(url) { this.url = url; sockets.push(this); } close() {} };
+  globalThis.TextDecoder = TextDecoder;
+  const tt = new TikFinity();
+  await tt.start('ws://localhost:21213/');
+  const ws = sockets.at(-1);
+  ws.onopen();
+  const msg = (o) => ws.onmessage({ data: typeof o === 'string' ? o : JSON.stringify(o) });
+  const steps = [];
+  msg({ event: 'config', data: { v: 1 } }); steps.push([tt.state, tt.diag.config]);
+  msg({ event: 'pong' }); msg({ event: 'state_update', state: {} }); steps.push([tt.state, tt.diag.unparsed]);
+  msg({ event: 'liveStatusChange', data: { isLive: false } }); steps.push([tt.state]);
+  msg({ event: 'chat', data: { uniqueId: 'a', comment: 'hi' } }); steps.push([tt.state, tt.diag.liveEvents]);
+  const bin = new TextEncoder().encode(JSON.stringify({ event: 'gift', data: { userId: '9', giftId: 1, giftName: 'GG', giftType: 2, diamondCount: 1, repeatCount: 1, msgId: 'b1' } }));
+  let got = 0; tt.onGift = () => got++;
+  ws.onmessage({ data: bin.buffer }); steps.push([tt.diag.binary, got]);
+  const want = [['on', true], ['on', 0], ['notlive'], ['live', 1], [1, 1]];
+  const ok = JSON.stringify(steps) === JSON.stringify(want);
+  all &= ok;
+  console.log(ok ? 'PASS' : 'FAIL', 'status: config/pong/notlive/live/binary', JSON.stringify(steps), ok ? '' : 'expected ' + JSON.stringify(want));
+  tt.stop();
+}
 // simulate() must not flip the state to live
 { const tt = new TikFinity(); tt.state = 'on'; tt.simulate(500); const ok = tt.state === 'on'; all &= ok; console.log(ok ? 'PASS' : 'FAIL', 'simulate keeps state', tt.state); }
 // t() inserts names literally

@@ -19,7 +19,13 @@ export interface GiftEvent {
   diamonds: number; // total diamonds in this batch
 }
 
-export type TikState = 'off' | 'connecting' | 'prompt' | 'on' | 'live' | 'denied' | 'error';
+// on: socket open; live: TikTok events are flowing; notlive: TikFinity says it isn't attached to a LIVE
+export type TikState = 'off' | 'connecting' | 'prompt' | 'on' | 'live' | 'notlive' | 'denied' | 'error';
+
+/** Messages that come from the TikTok LIVE itself (as opposed to TikFinity's own config/pong/state messages). */
+const LIVE_EVENTS = new Set([
+  'gift', 'chat', 'like', 'member', 'roomUser', 'follow', 'share', 'subscribe', 'social', 'emote', 'envelope', 'questionNew',
+]);
 
 export const DEFAULT_URL = 'ws://localhost:21213/';
 const FALLBACK_URL = 'ws://127.0.0.1:21213/';
@@ -44,10 +50,33 @@ interface Pending extends GiftEvent { first: number; last: number; }
 const str = (v: unknown) => (v === undefined || v === null ? '' : String(v));
 const num = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
+/** What the connection has seen, for the diagnostics panel (and for pasting into a bug report). */
+export interface TikDiag {
+  url: string;           // address of the current or last attempt
+  openedUrl: string;     // address that last opened successfully
+  attempts: number;
+  opens: number;
+  frames: number;        // messages received on the socket
+  binary: number;        // of which arrived as binary frames
+  unparsed: number;      // frames that weren't {"event", "data"} JSON
+  events: Record<string, number>;
+  gifts: number;         // gifts handed to the game (including test buttons)
+  config: boolean;       // TikFinity sent its {"event":"config"} greeting: we really reached TikFinity
+  liveEvents: number;    // events that came from the LIVE (not TikFinity's own messages)
+  lastAt: number;        // Date.now() of the last frame
+  lastClose: string;     // close code and reason of the last disconnect
+  recent: string[];      // last raw frames, truncated
+}
+
 export class TikFinity {
   state: TikState = 'off';
   onState: (s: TikState) => void = () => {};
   onGift: (g: GiftEvent) => void = () => {};
+  onDiag: () => void = () => {};
+  readonly diag: TikDiag = {
+    url: '', openedUrl: '', attempts: 0, opens: 0, frames: 0, binary: 0, unparsed: 0,
+    events: {}, gifts: 0, config: false, liveEvents: 0, lastAt: 0, lastClose: '', recent: [],
+  };
 
   private ws: WebSocket | null = null;
   private urls: string[] = [DEFAULT_URL, FALLBACK_URL];
@@ -67,6 +96,13 @@ export class TikFinity {
   }
 
   get running() { return this.enabled; }
+  get permission() { return this.perm?.state ?? 'unknown'; }
+
+  private emit(g: GiftEvent) {
+    this.diag.gifts++;
+    this.onGift(g);
+    this.onDiag();
+  }
 
   /** Call from a user gesture the first time, so the browser's permission prompt is expected. */
   async start(url?: string) {
@@ -126,21 +162,50 @@ export class TikFinity {
     this.drop();
     const url = this.urls[this.urlIdx % this.urls.length];
     this.set(!pageIsLocal() && this.perm?.state === 'prompt' ? 'prompt' : 'connecting');
+    const d = this.diag;
+    d.url = url;
+    d.attempts++;
     let ws: WebSocket;
     try {
       ws = new WebSocket(url); // no options bag: older browsers would treat it as a subprotocol
-    } catch {
+    } catch (err) {
+      d.lastClose = `constructor: ${(err as Error)?.name ?? err}`;
+      this.onDiag();
       this.retry();
       return;
     }
+    // text is expected, but a server may send JSON in binary frames: decode those too
+    ws.binaryType = 'arraybuffer';
     this.ws = ws;
-    ws.onopen = () => { this.attempt = 0; this.set('on'); };
-    ws.onmessage = (e) => {
-      if (typeof e.data !== 'string') return;
-      // only real traffic from TikFinity proves the LIVE link, never the test buttons
-      if (this.handle(e.data) && this.state === 'on') this.set('live');
+    ws.onopen = () => {
+      this.attempt = 0;
+      d.opens++;
+      d.openedUrl = url;
+      d.config = false;
+      this.set('on');
+      this.onDiag();
     };
-    ws.onclose = () => {
+    ws.onmessage = (e) => {
+      const binary = e.data instanceof ArrayBuffer;
+      const raw = typeof e.data === 'string' ? e.data : binary ? new TextDecoder().decode(e.data) : '';
+      d.frames++;
+      if (binary) d.binary++;
+      d.lastAt = Date.now();
+      d.recent.push(`${new Date().toLocaleTimeString()} ${binary ? '[bin] ' : ''}${raw.slice(0, 220)}`);
+      if (d.recent.length > 8) d.recent.shift();
+      const ev = this.handle(raw);
+      if (!ev) d.unparsed++;
+      // TikFinity greets every client with "config" and later sends pong/state_update: those
+      // prove the socket, not the LIVE. Only events from the stream itself (never the test
+      // buttons) mean gifts can arrive.
+      else if (ev === 'config') d.config = true;
+      else if (ev === 'liveStatusChange') this.set(this.liveFlag ? 'live' : 'notlive');
+      else if (LIVE_EVENTS.has(ev)) { d.liveEvents++; this.set('live'); }
+      this.onDiag();
+    };
+    ws.onclose = (e) => {
+      d.lastClose = `${e.code}${e.reason ? ` ${e.reason}` : ''}${e.wasClean ? '' : ' (not clean)'}`;
+      this.onDiag();
       if (this.ws !== ws) return;
       this.ws = null;
       this.retry();
@@ -160,16 +225,22 @@ export class TikFinity {
   // ---------------------------------------------------------------------------
   // events
 
+  private liveFlag = false;
+
   /**
-   * Parse one TikFinity message; returns whether it was a well-formed event.
+   * Parse one TikFinity message; returns its event name, or null if it isn't one.
+   * Messages without a data object (pong, state_update) are valid but carry nothing for us.
    * Public so tests and the "simulate" buttons can feed it.
    */
-  handle(raw: string): boolean {
+  handle(raw: string): string | null {
     let msg: { event?: unknown; data?: unknown };
-    try { msg = JSON.parse(raw); } catch { return false; }
-    if (!msg || typeof msg.event !== 'string' || !msg.data || typeof msg.data !== 'object') return false;
-    if (msg.event === 'gift') this.gift(msg.data as Record<string, any>);
-    return true;
+    try { msg = JSON.parse(raw); } catch { return null; }
+    if (!msg || typeof msg.event !== 'string') return null;
+    this.diag.events[msg.event] = (this.diag.events[msg.event] ?? 0) + 1;
+    const data = msg.data && typeof msg.data === 'object' ? (msg.data as Record<string, any>) : null;
+    if (msg.event === 'liveStatusChange') this.liveFlag = data?.isLive === true;
+    if (msg.event === 'gift' && data) this.gift(data);
+    return msg.event;
   }
 
   private gift(d: Record<string, any>) {
@@ -229,7 +300,7 @@ export class TikFinity {
 
   /** Taps in a combo arrive one by one; bundle them so a fast streak lands as one bigger gift. */
   private queue(userId: string, g: GiftEvent, immediate: boolean) {
-    if (immediate) { this.onGift(g); return; }
+    if (immediate) { this.emit(g); return; }
     // keyed on the stable userId (like the streaks), not the changeable @handle
     const key = `${userId}|${g.giftId}`;
     const now = performance.now();
@@ -244,7 +315,7 @@ export class TikFinity {
       if (now - p.last > 900 || now - p.first > 3000) {
         this.pending.delete(k);
         const { first: _f, last: _l, ...g } = p;
-        this.onGift(g);
+        this.emit(g);
       }
     }
   }

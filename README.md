@@ -52,10 +52,19 @@ Viewers' gifts make the streamer's pocket radio squawk, and the ghost comes for 
 
 **Setup for the streamer 主播设置**
 
-1. Install and open the **TikFinity Desktop App** (Windows only; the web version has no local Event API) and start your LIVE. 安装并打开 TikFinity 桌面版（仅 Windows），开始直播。
-2. Open the game in **Chrome or Edge** on the same PC. Expand "TikTok LIVE gifts (TikFinity)" on the title screen and tick the box. 在同一台电脑上用 Chrome / Edge 打开游戏，展开标题页的「TikTok 直播互动」并勾选。
+1. Open the **TikFinity Desktop App** (the web version has no local Event API), go LIVE on TikTok, then click **Connect to TikTok LIVE** until TikFinity no longer says "Disconnected". 打开 TikFinity 桌面版，先开播，再点「Connect to TikTok LIVE」。
+2. Open the game in **Chrome or Edge** on the same computer as TikFinity. Expand "TikTok LIVE gifts (TikFinity)" on the title screen and tick the box. 在同一台电脑上用 Chrome / Edge 打开游戏，展开标题页的「TikTok 直播互动」并勾选。
 3. Chrome/Edge will ask whether the site may access **apps on this device**: click **Allow**. If you clicked Block: click the icon left of the address bar → Site settings → "Apps on device" → Allow, then reload. 浏览器询问「访问此设备上的应用」时点「允许」。
 4. The status turns to "Receiving LIVE events ✓" after the first event arrives. Use the 1💎 / 30💎 / 500💎 test buttons to preview the effects. Only the streamer needs this; friends just join with the invite link.
+
+**Troubleshooting 连不上时**
+
+- TikFinity's account badge must say **LIVE / connected**, not **Disconnected**. "Disconnected" means TikFinity isn't attached to your stream, so it has no gifts to pass on: go LIVE on TikTok first, then click **Connect to TikTok LIVE**. TikFinity 右上角显示 Disconnected 时不会转发任何礼物。
+- When the game connects, TikFinity pops up **"Event API · Client connected!"** and the game's panel says "Connected to TikFinity ✓". If that never happens, the browser and TikFinity are not on the same computer, the browser blocked access, or TikFinity isn't running.
+- TikFinity's own **Event Simulator** (bottom of Actions & Events) only drives TikFinity's alerts; its test gifts are not sent to the Event API, so they won't show in the game. Use a real gift or the game's local test buttons.
+- Only one TikFinity session at a time ("Duplicate execution detected" stops the LIVE connection).
+- Gifts only take effect during a round; between rounds they show as "no round running".
+- The panel's **Diagnostics** section shows what arrived (TikFinity greeting, LIVE events, gifts, recent raw messages) and has a **Copy diagnostics** button for bug reports.
 
 Safari can't connect to a local app from an HTTPS page yet. Firefox works but may ask again after 24 h unless you tick "Remember". The address defaults to `ws://localhost:21213/` (TikFinity's documented port) and only accepts addresses on your own computer.
 

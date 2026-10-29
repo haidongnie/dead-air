@@ -119,7 +119,12 @@ export class Game {
 
   /** A gift relayed from TikFinity on this (the streamer's) machine. */
   onTikTokGift(g: { nick: string; name: string; count: number; diamonds: number }) {
-    if (!this.started || this.net.game()?.phase !== 'play') return;
+    if (!this.started) return;
+    if (this.net.game()?.phase !== 'play') {
+      // between rounds the gift can't lure anything, but the streamer should still see it arrive
+      this.hud.giftToast(t('giftIdle', { n: g.nick, g: g.name, c: g.count }), 1);
+      return;
+    }
     this.net.act({ k: 'gift', n: g.nick, g: g.name, c: g.count, d: g.diamonds });
   }
 

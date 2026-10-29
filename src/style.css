@@ -59,6 +59,11 @@ button { font: inherit; cursor: pointer; }
 .tt-tests button { font-family: var(--mono); font-size: 17px; background: #1a1a1a; color: var(--ink); border: 1px solid #555; padding: 1px 10px; }
 .tt-tests button:hover { border-color: #fe2c55; }
 #tt-status.on { color: #25f4ee; } #tt-status.error { color: #fe2c55; }
+.tt .warn { color: #ffcf6a; font-size: 13px; }
+#tt-diag { margin-top: 8px; font-size: 13px; color: var(--dim); }
+#tt-diag summary { cursor: pointer; }
+#tt-diag-text { font-family: var(--mono); font-size: 14px; line-height: 1.2; white-space: pre-wrap; word-break: break-all; max-height: 220px; overflow: auto; background: #0a0a0a; border: 1px solid #333; padding: 6px 8px; margin: 6px 0; color: #bdb6a6; }
+#tt-copy { font-family: var(--mono); font-size: 16px; background: #1a1a1a; color: var(--ink); border: 1px solid #555; padding: 1px 10px; }
 
 #enter {
   font-family: var(--mono); font-size: 30px; padding: 10px 34px; color: #fff; background: transparent;

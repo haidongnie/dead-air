@@ -127,7 +127,19 @@ const S = {
   ttTest: { zh: '测试', en: 'Test' },
   ttS_connecting: { zh: '正在连接 TikFinity…（请确认 TikFinity 桌面版正在运行）', en: 'Connecting to TikFinity… (make sure the TikFinity desktop app is running)' },
   ttS_prompt: { zh: '浏览器会询问是否允许访问「此设备上的应用」——请点「允许」', en: 'Your browser will ask to access "apps on this device" — click Allow' },
-  ttS_on: { zh: '已连接 TikFinity · 等待直播事件', en: 'Connected to TikFinity · waiting for LIVE events' },
+  ttS_on: { zh: '已打开到 TikFinity 的连接 · 等待 TikFinity 回应', en: 'Socket to TikFinity open · waiting for TikFinity' },
+  ttS_config: {
+    zh: '已连上 TikFinity ✓（TikFinity 会弹出「Client connected!」）· 等待直播事件',
+    en: 'Connected to TikFinity ✓ (TikFinity shows "Client connected!") · waiting for LIVE events',
+  },
+  ttS_quiet: {
+    zh: '还没收到任何直播事件：TikFinity 右上角是不是显示 Disconnected？先在 TikTok 开播，再在 TikFinity 点「Connect to TikTok LIVE」',
+    en: 'No LIVE events yet: does TikFinity show "Disconnected"? Go LIVE on TikTok first, then click "Connect to TikTok LIVE" in TikFinity',
+  },
+  ttS_notlive: {
+    zh: 'TikFinity 报告：没有连上直播（Disconnected）。先在 TikTok 开播，再在 TikFinity 点「Connect to TikTok LIVE」',
+    en: 'TikFinity reports it is not attached to a LIVE (Disconnected). Go LIVE on TikTok, then click "Connect to TikTok LIVE"',
+  },
   ttS_live: { zh: '正在接收直播事件 ✓', en: 'Receiving LIVE events ✓' },
   ttS_denied: {
     zh: '浏览器拒绝了访问。点击地址栏左侧的图标 → 网站设置 →「此设备上的应用」→ 允许，然后刷新页面。',
@@ -137,6 +149,16 @@ const S = {
     zh: '连接不上，正在重试…请确认 TikFinity 桌面版（Windows）已打开。Safari 暂不支持，请用 Chrome / Edge。',
     en: 'Cannot connect, retrying… Is the TikFinity desktop app (Windows) open? Safari is not supported yet; use Chrome or Edge.',
   },
+  ttNotWindows: {
+    zh: '⚠️ 这台电脑不是 Windows。游戏必须和 TikFinity 桌面版在同一台电脑上运行：如果你的 TikFinity 开在 Windows 电脑上，就要在那台电脑上用 Chrome 或 Edge 打开游戏。',
+    en: '⚠️ This computer is not running Windows. The game must run on the same computer as the TikFinity desktop app: if TikFinity is on a Windows PC, open the game there in Chrome or Edge.',
+  },
+  ttTestNote: { zh: '本地测试（不经过 TikFinity）', en: 'Local test (does not go through TikFinity)' },
+  giftIdle: { zh: '🎁 {n} 送出 {g}×{c}（回合没在进行，未生效）', en: '🎁 {n} sent {g}×{c} (no round running, no effect)' },
+  ttLastIdle: { zh: '最近礼物：{n} · {g}×{c}（{d}💎，游戏开始后才会生效）', en: 'Last gift: {n} · {g}×{c} ({d}💎, takes effect once the game starts)' },
+  ttDiag: { zh: '诊断信息（连不上时把这里复制给开发者）', en: 'Diagnostics (copy this when asking for help)' },
+  ttCopy: { zh: '复制诊断信息', en: 'Copy diagnostics' },
+  ttCopied: { zh: '已复制 ✓', en: 'Copied ✓' },
   ttLast: { zh: '最近礼物：{n} · {g}×{c}（{d}💎）', en: 'Last gift: {n} · {g}×{c} ({d}💎)' },
   ttOff: { zh: 'TikTok 未连接', en: 'TikTok off' },
   ttConnecting: { zh: 'TikTok 连接中…', en: 'TikTok connecting…' },
