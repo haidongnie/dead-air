@@ -336,6 +336,7 @@ class Brain {
   private spawnCap = Infinity; // caps the hidden timer for the next spawn
   private capT = 0;           // seconds that spawn boost stays in effect
   private focusT = 0;         // seconds it goes for the gifter (tier 1: no speed boost)
+  private minHide = 0;        // a breather after a banish that the spawn cap can't shorten
 
   wake() { if (this.mode === 'dormant') { this.mode = 'hidden'; this.timer = 6; } }
   adopt(c: CreatureNet, g: GameState) {
@@ -359,7 +360,9 @@ class Brain {
   /** A gift made noise at `at`. Tier 1 draws it over, 2 makes it hunt, 3 summons its true form. */
   lure(at: { x: number; y: number; z: number }, tier: GiftTier, target: string, g: GameState) {
     const powered = g.power || g.exit;
-    this.alertAt = this.noiseAt(at.x, at.y, at.z);
+    // a hunt follows the streamer, so only a rose's ghost walks to where the noise was made
+    // (a hunt's noise spot would otherwise pull it back there once the hunt ends)
+    this.alertAt = tier === 1 ? this.noiseAt(at.x, at.y, at.z) : null;
     this.repath = 0;
     this.lureTarget = target;
     if (tier === 1) {
@@ -433,14 +436,20 @@ class Brain {
     switch (this.mode) {
       case 'hidden': {
         c.m = 0; c.s = 0;
-        if (this.timer > this.spawnCap) this.timer = this.spawnCap;
+        if (this.timer > Math.max(this.spawnCap, this.minHide)) this.timer = Math.max(this.spawnCap, this.minHide);
         this.timer -= dt;
         if (this.timer <= 0 && live.length) this.spawn(live, g, seen, net);
         return null;
       }
       case 'banished': {
         this.timer -= dt;
-        if (this.timer <= 0) { this.mode = 'hidden'; this.timer = this.enraged ? 9 : 22 + Math.random() * 14; c.m = 0; }
+        if (this.timer <= 0) {
+          this.mode = 'hidden';
+          c.m = 0;
+          // while a gift's window is open, driving it off buys only a short breather
+          this.minHide = this.capT > 0 ? 4 : 0;
+          this.timer = this.capT > 0 ? 4 : this.enraged ? 9 : 22 + Math.random() * 14;
+        }
         return null;
       }
       case 'roam':
@@ -463,6 +472,9 @@ class Brain {
             this.mode = 'hidden';
             this.timer = this.enraged ? 8 : 16;
             this.target = '';
+            // the gift got what it paid for: teammates get the normal time to revive
+            this.spawnCap = Infinity; this.spawnNear = ''; this.capT = 0;
+            this.huntT = 0; this.revealT = 0; this.focusT = 0;
             return tgt.id;
           }
           if (this.timer <= 0 || !sees) { this.mode = 'stalk'; c.m = trueForm ? 2 : 1; }
@@ -548,8 +560,9 @@ class Brain {
     const n = usable[summoned ? 0 : Math.floor(Math.random() * usable.length)];
     c.x = n.x; c.y = n.y; c.z = n.z;
     this.target = target.id;
-    this.spawnNear = '';
-    this.spawnCap = Infinity;
+    // the spawn boost lasts the whole gift window (update() resets it when capT runs out)
+    if (this.capT <= 0) { this.spawnNear = ''; this.spawnCap = Infinity; }
+    this.minHide = 0;
     // wear the face of someone who is NOT the target, if possible
     const others = seen.filter((s) => s.id !== target.id && !s.out);
     c.d = (others.length ? others[Math.floor(Math.random() * others.length)] : target).id;
