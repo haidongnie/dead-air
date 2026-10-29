@@ -119,7 +119,7 @@ export class Hud {
   }
 
   room(code: string | undefined) {
-    $('room-code').textContent = code ? `${t('room')} ${code}` : '';
+    $('room-code').innerHTML = code ? `${escape(t('room'))} <b>${escape(code)}</b>` : '';
   }
 
   lockHint(show: boolean) { $('lockhint').classList.toggle('hidden', !show); }

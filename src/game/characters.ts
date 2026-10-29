@@ -18,7 +18,7 @@ export function nametag(text: string, color: string): THREE.Sprite {
   g.shadowColor = 'rgba(0,0,0,0.9)';
   g.shadowBlur = 10;
   g.fillStyle = color;
-  g.fillText(text.slice(0, 16), 256, 48);
+  g.fillText(text.slice(0, 16), 256, 48, 496); // long (e.g. CJK) names are squeezed, not clipped
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false }));

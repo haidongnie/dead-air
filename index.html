@@ -22,6 +22,19 @@
       <h1 class="logo" data-text="DEAD AIR">DEAD AIR</h1>
       <p class="tag" data-t="tagline"></p>
       <p class="story" data-t="story"></p>
+      <div class="lobby">
+        <label class="name-row"><span data-t="nameLabel"></span>
+          <input id="player-name" type="text" maxlength="16" autocomplete="nickname" spellcheck="false" data-ph="namePh" />
+        </label>
+        <div class="lobby-row">
+          <button id="create" data-t="create"></button>
+          <span class="or" data-t="or"></span>
+          <input id="room-input" type="text" autocomplete="off" spellcheck="false" data-ph="codePh" />
+          <button id="join" data-t="join"></button>
+        </div>
+        <p id="invite-hint" class="note hidden"></p>
+      </div>
+      <p id="status" class="status"></p>
       <label class="opt"><input type="checkbox" id="voice-opt" checked /> <span data-t="voiceOpt"></span></label>
       <p class="note" data-t="voiceNote"></p>
       <details id="tt-panel" class="tt">
@@ -47,9 +60,6 @@
           <button type="button" id="tt-copy" data-t="ttCopy"></button>
         </details>
       </details>
-      <button id="enter" data-t="enter"></button>
-      <p id="status" class="status"></p>
-      <p id="invite-hint" class="note hidden">↳ invite link · 邀请链接</p>
       <p class="meta"><span data-t="players"></span> · <span data-t="desktop"></span></p>
       <p class="controls" data-t="controls"></p>
     </div>

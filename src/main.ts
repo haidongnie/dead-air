@@ -19,37 +19,126 @@ const $ = (id: string) => document.getElementById(id)!;
 function applyText() {
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
   document.querySelectorAll<HTMLElement>('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t as Key); });
+  document.querySelectorAll<HTMLInputElement>('[data-ph]').forEach((el) => { el.placeholder = t(el.dataset.ph as Key); });
   $('lang').textContent = lang === 'zh' ? 'EN' : '中文';
 }
 applyText();
-$('lang').onclick = () => { setLang(lang === 'zh' ? 'en' : 'zh'); applyText(); renderTt(); };
+$('lang').onclick = () => { setLang(lang === 'zh' ? 'en' : 'zh'); applyText(); renderLobbyText(); renderTt(); };
 
 const canvas = $('scene') as HTMLCanvasElement;
 const game = new Game(canvas);
 setAnisotropy(Math.min(8, game.renderer.renderer.capabilities.getMaxAnisotropy()));
 
 $('invite').onclick = async () => {
-  try { await navigator.clipboard.writeText(location.href); } catch { /* clipboard blocked */ }
+  try { await navigator.clipboard.writeText(game.net.roomCode ?? ''); } catch { /* clipboard blocked */ }
   $('invite').textContent = t('copied');
   setTimeout(() => { $('invite').textContent = t('invite'); }, 2500);
 };
 
-$('enter').onclick = async () => {
+// ---------------------------------------------------------------------------
+// Lobby: create a room (Playroom picks a 4-character code) or type a friend's code.
+
+/** Playroom room codes: 4 characters from 1-9 and A-Z without O (see its room id generator). */
+const CODE = /^[1-9A-NP-Z]{4}$/;
+
+/** Accepts "ABCD", "abcd", "RABCD" (the URL hash form) or a pasted invite link; '' if it has no code. */
+function normalizeCode(input: string): string {
+  let s = input.trim();
+  const m = s.match(/#r=([A-Za-z0-9_]+)/);
+  if (m) s = m[1];
+  else if (s.includes('://')) return ''; // a link without a room in it
+  s = s.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (s.length === 5 && s.startsWith('R')) s = s.slice(1);
+  return s;
+}
+
+/** Lobby messages are kept as keys so the language button can re-render them. */
+let statusMsg: { key: Key; vars?: Record<string, string | number> } | null = null;
+function setStatus(key: Key | null, vars?: Record<string, string | number>) {
+  statusMsg = key ? { key, vars } : null;
+  $('status').textContent = key ? t(key, vars) : '';
+}
+function renderLobbyText() {
+  if (invited) $('invite-hint').textContent = t('inviteFor', { code: invited });
+  if (statusMsg) $('status').textContent = t(statusMsg.key, statusMsg.vars);
+}
+
+const nameInput = $('player-name') as HTMLInputElement;
+const roomInput = $('room-input') as HTMLInputElement;
+try { nameInput.value = localStorage.getItem('deadair.name') ?? ''; } catch { /* storage blocked */ }
+
+// an invite link (#r=RABCD) pre-fills the code
+const invited = location.hash.includes('r=') ? normalizeCode(location.hash) : '';
+if (invited) {
+  roomInput.value = invited;
+  $('join').classList.add('primary');
+  $('invite-hint').textContent = t('inviteFor', { code: invited });
+  $('invite-hint').classList.remove('hidden');
+}
+roomInput.addEventListener('input', () => {
+  // a pasted invite link turns into its code right away
+  const v = roomInput.value;
+  roomInput.value = /#r=|:\/\//.test(v) ? normalizeCode(v) : v.toUpperCase();
+  $('join').classList.toggle('primary', !!roomInput.value);
+});
+roomInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('join').click(); });
+
+let entering = false;
+let built = false;
+function lobbyBusy(busy: boolean) {
+  entering = busy;
+  for (const id of ['create', 'join']) $(id).toggleAttribute('disabled', busy);
+}
+
+async function enter(roomCode?: string) {
+  if (entering) return;
+  lobbyBusy(true);
   sound.init();
   sound.resume();
   const withMic = ($('voice-opt') as HTMLInputElement).checked;
-  $('enter').setAttribute('disabled', '');
-  $('title').classList.add('loading');
-  const status = $('status');
-  status.textContent = t('loading');
-  await loadModels(MODELS, (done, total) => { status.textContent = `${t('loading')} ${Math.round((done / total) * 100)}%`; });
-  game.build();
-  // warm up shaders so the first frames don't hitch
-  game.renderer.renderer.compile(game.scene, game.camera);
-  status.textContent = t('connecting');
+  const name = nameInput.value.trim().slice(0, 16);
+  try { localStorage.setItem('deadair.name', name); } catch { /* storage blocked */ }
+  if (!built) {
+    setStatus('loading');
+    await loadModels(MODELS, (done, total) => { $('status').textContent = `${t('loading')} ${Math.round((done / total) * 100)}%`; });
+    game.build();
+    // warm up shaders so the first frames don't hitch
+    game.renderer.renderer.compile(game.scene, game.camera);
+    built = true;
+  }
+  setStatus('connecting');
+  // Playroom takes the room from the URL first. Joining writes the chosen code there, so a
+  // reload (Playroom reloads by itself after repeated connection failures) keeps the invite;
+  // creating clears it, and Playroom writes the new room's code once connected.
+  history.replaceState(null, '', location.pathname + location.search + (roomCode ? `#r=R${roomCode}` : ''));
+  try {
+    await game.connect({ roomCode, name });
+  } catch (e) {
+    // Playroom resets itself when insertCoin fails, so the player can simply try again
+    const msg = (e as Error)?.message ?? String(e);
+    if (msg === 'ROOM_LIMIT_EXCEEDED') setStatus('roomFull', { code: roomCode ?? '' });
+    else setStatus('connectFail', { e: msg });
+    lobbyBusy(false);
+    return;
+  }
+  setStatus(null);
   $('title').classList.add('hidden');
-  await game.connect();
   await game.begin(withMic);
+  // Joined a code nobody is in: most likely a typo. Checked after the intro, which covers the
+  // screen, so the warning is actually seen (and the player list has long since synced).
+  if (roomCode && game.net.players.size <= 1) game.hud.subtitle(t('roomEmpty', { code: roomCode }), 9);
+}
+
+$('create').onclick = () => enter();
+$('join').onclick = () => {
+  const code = normalizeCode(roomInput.value);
+  if (!CODE.test(code)) {
+    setStatus('codeInvalid');
+    roomInput.focus();
+    return;
+  }
+  roomInput.value = code;
+  enter(code);
 };
 
 // ---------------------------------------------------------------------------
@@ -167,8 +256,6 @@ document.querySelectorAll<HTMLButtonElement>('[data-test]').forEach((b) => {
 });
 renderTt();
 
-// The Playroom lobby can be skipped back into from an invite link (#r=...).
-if (location.hash.includes('r=')) $('invite-hint').classList.remove('hidden');
 
 // dev-only handle for inspecting the scene from the console
 if (import.meta.env.DEV) Object.assign(window as object, { __game: game, __tt: tt });

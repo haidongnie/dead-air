@@ -38,10 +38,13 @@ export class RemoteAvatar {
   focus = false;
   speaking = 0; // 0..1, from voice activity
 
+  private tagText = '';
+
   constructor(scene: THREE.Scene, readonly id: string, variant: number, name: string, color: string) {
     this.char = new Character(VARIANTS[variant % VARIANTS.length], PLAYER_CLIPS, 1.72);
     scene.add(this.char.root);
     this.tag = nametag(name, color);
+    this.tagText = name + color;
     this.tag.position.y = 2.0;
     this.char.root.add(this.tag);
     this.light = new THREE.SpotLight(0xfff0d8, 0, 18, 0.5, 0.55, 1.5);
@@ -60,6 +63,20 @@ export class RemoteAvatar {
     this.focus = !!p[7];
   }
   private yawT = 0;
+
+  /** Nicknames can arrive a moment after the player does: redraw the tag when it changes. */
+  setName(name: string, color: string) {
+    if (name + color === this.tagText) return;
+    this.tagText = name + color;
+    const old = this.tag;
+    this.tag = nametag(name, color);
+    this.tag.position.copy(old.position);
+    this.tag.visible = old.visible;
+    this.char.root.remove(old);
+    old.material.map?.dispose();
+    old.material.dispose();
+    this.char.root.add(this.tag);
+  }
 
   setDowned(d: boolean) {
     if (d === this.downed) return;
@@ -154,7 +171,14 @@ export class CreatureView {
 
   private tagFor(id: string, name: string, color: string) {
     let t = this.tags.get(id);
-    if (!t) { t = nametag(name, color); t.position.y = 2.0; this.tags.set(id, t); }
+    if (t && t.userData.text !== name + color) {
+      // the player changed nickname: a stale tag would give the disguise away
+      t.removeFromParent();
+      t.material.map?.dispose();
+      t.material.dispose();
+      t = undefined;
+    }
+    if (!t) { t = nametag(name, color); t.position.y = 2.0; t.userData.text = name + color; this.tags.set(id, t); }
     return t;
   }
 

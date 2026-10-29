@@ -33,7 +33,8 @@ Something in the house wears your friends' faces.
 
 断电恢复后，怪物会伪装成你的某个队友（同样的模型和名字）在屋里走动。识别方法：它不拿手电、没有脚步声、走路略慢、眼睛会反光。开启语音时，它还会在你本地回放队友说过的话。靠近后它会现出原形扑过来，用右键聚光照住它可以驱散。
 
-Share the room link (the "Copy invite link" button, or the URL with `#r=...`) with friends to play together.
+**Playing with friends 和朋友一起玩**: one player types a name and presses **Create room**; the 4-character **room code** appears at the top of their screen (with a copy button). Friends type that code on the title screen and press **Join**. No QR code or lobby step. A shared page URL with `#r=...` still works and pre-fills the code.
+一人点「创建房间」，屏幕上方会显示 4 位房间码；朋友在标题页输入房间码，点「加入」即可。
 
 ## TikTok LIVE gifts · 直播打赏互动（TikFinity）
 
@@ -55,7 +56,7 @@ Viewers' gifts make the streamer's pocket radio squawk, and the ghost comes for 
 1. Open the **TikFinity Desktop App** (the web version has no local Event API), go LIVE on TikTok, then click **Connect to TikTok LIVE** until TikFinity no longer says "Disconnected". 打开 TikFinity 桌面版，先开播，再点「Connect to TikTok LIVE」。
 2. Open the game in **Chrome or Edge** on the same computer as TikFinity. Expand "TikTok LIVE gifts (TikFinity)" on the title screen and tick the box. 在同一台电脑上用 Chrome / Edge 打开游戏，展开标题页的「TikTok 直播互动」并勾选。
 3. Chrome/Edge will ask whether the site may access **apps on this device**: click **Allow**. If you clicked Block: click the icon left of the address bar → Site settings → "Apps on device" → Allow, then reload. 浏览器询问「访问此设备上的应用」时点「允许」。
-4. The status turns to "Receiving LIVE events ✓" after the first event arrives. Use the 1💎 / 30💎 / 500💎 test buttons to preview the effects. Only the streamer needs this; friends just join with the invite link.
+4. The status turns to "Receiving LIVE events ✓" after the first event arrives. Use the 1💎 / 30💎 / 500💎 test buttons to preview the effects. Only the streamer needs this; friends just join with the room code.
 
 **Troubleshooting 连不上时**
 

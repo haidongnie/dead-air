@@ -17,14 +17,22 @@ export class Net {
   onFx: (f: Fx) => void = () => {};
   onSignal: (msg: any, from: PlayerState) => void = () => {};
 
-  async start() {
+  /**
+   * Join `roomCode`, or create a new room (Playroom generates a 4-character code) when omitted.
+   * The game has its own lobby on the title screen, so Playroom's lobby (with its QR code) is skipped.
+   * Rejects with message "ROOM_LIMIT_EXCEEDED" when the room is full.
+   */
+  async start(opts: { roomCode?: string; name?: string } = {}) {
     const gameId = import.meta.env.VITE_PLAYROOM_GAME_ID as string | undefined;
     await insertCoin({
       ...(gameId ? { gameId } : {}),
+      ...(opts.roomCode ? { roomCode: opts.roomCode } : {}),
+      skipLobby: true,
       maxPlayersPerRoom: 4,
       reconnectGracePeriod: 20000,
-      defaultPlayerStates: { hold: '', model: -1 },
+      defaultPlayerStates: { hold: '', model: -1, name: '' },
     });
+    if (opts.name) myPlayer().setState('name', opts.name.slice(0, 16), true);
     RPC.register('act', async (a: Action, from: PlayerState) => {
       if (isHost()) this.onAction(a, from);
     });
@@ -54,9 +62,11 @@ export class Net {
   pose(p: PlayerState): PlayerNet['p'] | undefined { return p.getState('p'); }
   setPose(v: PlayerNet['p']) { myPlayer().setState('p', v, false); }
 
+  /** The nickname typed on the title screen, else Playroom's generated name. */
   name(p: PlayerState | string | undefined) {
     const pl = typeof p === 'string' ? this.players.get(p) : p;
-    return pl?.getProfile().name || '???';
+    const chosen = pl?.getState('name');
+    return (typeof chosen === 'string' && chosen.trim().slice(0, 16)) || pl?.getProfile().name || '???';
   }
   color(p: PlayerState | string | undefined) {
     const pl = typeof p === 'string' ? this.players.get(p) : p;

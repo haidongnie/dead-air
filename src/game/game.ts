@@ -86,7 +86,7 @@ export class Game {
     this.buildDust();
   }
 
-  async connect() {
+  async connect(room: { roomCode?: string; name?: string } = {}) {
     this.net.onFx = (f) => this.onFx(f);
     this.net.onJoin = (p) => this.onJoin(p);
     this.net.onQuit = (p) => {
@@ -95,7 +95,7 @@ export class Game {
       this.voice.removePeer(p.id);
       if (this.started) this.hud.toast(t('tLeft', { n: this.net.name(p) }));
     };
-    await this.net.start();
+    await this.net.start(room);
     if (this.net.isHost) this.host.ensureGame();
     this.pickModel();
   }
@@ -103,7 +103,14 @@ export class Game {
   private onJoin(p: PlayerState) {
     if (p.id === this.net.me.id) return;
     this.voice.addPeer(p.id);
-    if (this.started) this.hud.toast(t('tJoin', { n: this.net.name(p) }));
+    if (!this.started) return;
+    // the joiner sets its nickname right after connecting: give it a moment to arrive
+    let tries = 0;
+    const announce = () => {
+      if (typeof p.getState('name') !== 'string' || !p.getState('name')) { if (++tries < 15) { setTimeout(announce, 100); return; } }
+      this.hud.toast(t('tJoin', { n: this.net.name(p) }));
+    };
+    announce();
   }
 
   /** Choose a character variant nobody else is wearing. */
@@ -139,6 +146,7 @@ export class Game {
     const idx = [...this.net.players.keys()].sort().indexOf(this.net.me.id);
     this.player.respawn(Math.max(0, idx));
     this.timer.connect(document);
+    this.input.reset();
     this.renderer.renderer.setAnimationLoop((ts) => this.frame(ts));
     // the intro: every TV in town cuts to the emergency broadcast
     const stop = sound.eas();
@@ -477,6 +485,7 @@ export class Game {
         this.avatars.set(id, av);
       }
       av.apply(pose);
+      av.setName(this.net.name(p), this.net.color(p));
       av.setDowned(!!g.downed[id]);
       av.char.root.visible = !g.escaped[id] || this.player.pos.z > 7;
       av.update(dt, this.camera.position);

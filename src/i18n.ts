@@ -18,7 +18,23 @@ export function setLang(l: Lang) {
 
 const S = {
   tagline: { zh: '别相信熟悉的脸', en: "Don't trust familiar faces" },
-  enter: { zh: '进入怀特洛克老宅', en: 'Enter the Whitlock house' },
+  nameLabel: { zh: '昵称', en: 'Name' },
+  namePh: { zh: '你的名字（可不填）', en: 'Your name (optional)' },
+  create: { zh: '创建房间', en: 'Create room' },
+  or: { zh: '或 输入房间码', en: 'or enter a code' },
+  codePh: { zh: '房间码', en: 'CODE' },
+  join: { zh: '加入', en: 'Join' },
+  codeInvalid: {
+    zh: '房间码是朋友屏幕上方显示的 4 位字母或数字（没有 0 和 O）',
+    en: 'The room code is the 4 letters/digits shown at the top of your friend’s screen (no 0 or O)',
+  },
+  inviteFor: { zh: '朋友邀请你加入房间 {code}，点「加入」即可', en: 'You were invited to room {code}: press Join' },
+  roomFull: { zh: '房间 {code} 已经满了（最多 4 人）。换个房间码，或者自己创建房间。', en: 'Room {code} is full (4 players max). Try another code or create your own room.' },
+  roomEmpty: {
+    zh: '房间 {code} 里还没有其他人。如果是房间码输错了，刷新页面重新输入；单人也可以直接开始。',
+    en: 'Nobody else is in room {code} yet. If you mistyped the code, reload and enter it again; you can also play solo.',
+  },
+  connectFail: { zh: '连接失败：{e}。再点一次试试，不行就刷新页面。', en: 'Could not connect: {e}. Try again, or reload the page.' },
   players: { zh: '2–4 人合作 · 也可单人', en: '2–4 player co-op · solo works too' },
   desktop: { zh: '建议使用电脑 + 耳机游玩', en: 'Best on desktop with headphones' },
   voiceOpt: { zh: '开启近距离语音（推荐）', en: 'Enable proximity voice chat (recommended)' },
@@ -37,9 +53,9 @@ const S = {
   clickToPlay: { zh: '点击画面继续', en: 'Click to continue' },
   connecting: { zh: '正在连接房间…', en: 'Connecting to room…' },
   loading: { zh: '正在载入老宅…', en: 'Loading the house…' },
-  invite: { zh: '复制邀请链接', en: 'Copy invite link' },
-  copied: { zh: '已复制！发给朋友一起玩', en: 'Copied! Send it to your friends' },
-  room: { zh: '房间', en: 'Room' },
+  invite: { zh: '复制房间码', en: 'Copy code' },
+  copied: { zh: '已复制！把房间码发给朋友', en: 'Copied! Send the code to your friends' },
+  room: { zh: '房间码', en: 'Room code' },
 
   // objectives
   objFuses: { zh: '恢复供电：找到保险丝并装进厨房的保险丝盒', en: 'Restore power: find the fuses for the kitchen fuse box' },

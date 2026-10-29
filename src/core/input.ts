@@ -13,7 +13,9 @@ export class Input {
   constructor(private canvas: HTMLCanvasElement) {
     addEventListener('keydown', (e) => {
       if (this.modal) { this.modal(e); return; }
-      if (e.code === 'Tab') e.preventDefault();
+      // typing a name or room code is not gameplay: an "M" must not mute the mic later
+      if ((e.target as HTMLElement | null)?.closest?.('input, textarea, [contenteditable]')) return;
+      if (e.code === 'Tab' && this.locked) e.preventDefault();
       if (!this.keys.has(e.code)) this.pressed.add(e.code);
       this.keys.add(e.code);
     });
@@ -50,6 +52,14 @@ export class Input {
   down(code: string) { return !this.modal && this.keys.has(code); }
   /** True once per physical key press. */
   hit(code: string) { return !this.modal && this.pressed.has(code); }
+
+  /** Forget everything pressed so far (e.g. keys typed on the title screen). */
+  reset() {
+    this.keys.clear();
+    this.pressed.clear();
+    this.rmb = false;
+    this.mouseDX = this.mouseDY = 0;
+  }
 
   endFrame() {
     this.pressed.clear();
