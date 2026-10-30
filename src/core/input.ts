@@ -1,5 +1,11 @@
 // Keyboard + mouse with pointer lock. Modal UI (documents) takes
 // the keyboard by setting `modal`, which also suppresses movement.
+
+// Largest believable mouse step in one event (px). A real flick is spread over many events;
+// a single event beyond this (25-50 degrees of turn) is a browser glitch.
+const MAX_STEP_X = 400;
+const MAX_STEP_Y = 250;
+
 export class Input {
   readonly keys = new Set<string>();
   private pressed = new Set<string>();
@@ -8,6 +14,7 @@ export class Input {
   rmb = false;
   wheel = 0;
   modal: ((e: KeyboardEvent) => void) | null = null;
+  private lockedAt = 0;
   onLockChange: (locked: boolean) => void = () => {};
 
   constructor(private canvas: HTMLCanvasElement) {
@@ -23,6 +30,11 @@ export class Input {
     addEventListener('blur', () => { this.keys.clear(); this.rmb = false; });
     addEventListener('mousemove', (e) => {
       if (!this.locked) return;
+      // Chrome sometimes reports bogus movement under pointer lock: the first events after the
+      // lock carry how far the hidden cursor travelled, and some mice/OSes emit stray spikes.
+      // One of those used to snap the view (and the flashlight) straight up at the ceiling.
+      if (performance.now() - this.lockedAt < 150) return;
+      if (Math.abs(e.movementX) > MAX_STEP_X || Math.abs(e.movementY) > MAX_STEP_Y) return;
       this.mouseDX += e.movementX;
       this.mouseDY += e.movementY;
     });
@@ -36,6 +48,7 @@ export class Input {
     addEventListener('wheel', (e) => { this.wheel += Math.sign(e.deltaY); }, { passive: true });
     document.addEventListener('pointerlockchange', () => {
       if (!this.locked) { this.rmb = false; this.keys.clear(); }
+      else { this.lockedAt = performance.now(); this.mouseDX = this.mouseDY = 0; }
       this.onLockChange(this.locked);
     });
   }
