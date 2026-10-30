@@ -321,13 +321,21 @@ export class TikFinity {
   }
 
   /** Feed a fake TikFinity gift through the real parser (for the test buttons). */
-  simulate(diamonds: number) {
+  simulate(diamonds: number | 'heart') {
     const seq = ++this.simSeq;
     const base = {
       userId: '7000000000000000000', uniqueId: 'test_viewer', nickname: 'Test Viewer',
       groupId: String(Date.now()), profilePictureUrl: '',
     };
-    if (diamonds < 10) {
+    if (diamonds === 'heart') {
+      // a two-tap Finger Heart combo
+      for (let i = 1; i <= 2; i++) {
+        this.handle(JSON.stringify({
+          event: 'gift',
+          data: { ...base, msgId: `sim-${seq}-${i}`, giftId: 5487, giftName: 'Finger Heart', giftType: 1, diamondCount: 5, repeatCount: i, repeatEnd: i === 2 },
+        }));
+      }
+    } else if (diamonds < 10) {
       // a Rose combo: three taps, the last one marked as the end of the streak
       for (let i = 1; i <= 3; i++) {
         this.handle(JSON.stringify({

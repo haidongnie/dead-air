@@ -332,6 +332,12 @@ export class Sound {
    * A viewer's gift: the streamer's pocket radio squawks. Tier 1 is a short squelch,
    * tier 2 adds a ringing bell, tier 3 is a full emergency-tone blast.
    */
+  /** A Finger Heart: a warm two-note chime (a rising arpeggio when it picked someone up). */
+  heartChime(pos: Vec, revived: boolean) {
+    const notes = revived ? [523.3, 659.3, 784, 1046.5] : [659.3, 880];
+    notes.forEach((f, i) => this.bell(pos, f, revived ? 0.32 : 0.22, i * 0.13));
+  }
+
   giftNoise(pos: Vec, tier: 1 | 2 | 3) {
     const t = this.now;
     const dst = this.spatial(pos, 2.5, 0.7).input;

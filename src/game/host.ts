@@ -1,7 +1,7 @@
 import type { PlayerState } from 'playroomkit';
 import type { Net } from './net';
 import {
-  newGame, teamItems, giftTier, radioTuned, RELICS, ROUND_MS, type Action, type CreatureNet, type GameState, type GiftTier, type Relic,
+  newGame, teamItems, giftTier, isRescueGift, radioTuned, RELICS, ROUND_MS, type Action, type CreatureNet, type GameState, type GiftTier, type Relic,
 } from './state';
 import { NAV, groundY, lineOfSight, resolveCircle } from '../world/layout';
 import { findWay, nearestWalkable, walkableCells, type P3 } from '../world/nav';
@@ -232,6 +232,20 @@ export class Host {
     const giftName = String(a.g ?? '').slice(0, 32);
     const count = Math.max(1, Math.min(9999, Math.floor(Number(a.c) || 1)));
     const diamonds = Math.max(0, Math.min(1e6, Math.floor(Number(a.d) || 0)));
+    const at = { x: pose[0], y: pose[1] + 1.2, z: pose[2] };
+    if (isRescueGift(String(a.i ?? '').slice(0, 24), giftName)) {
+      // Chat saves the streamer: a downed streamer gets up on the spot. The creature already
+      // vanished after the catch, so there is no need for extra protection.
+      const revived = !!g.downed[from.id] && !g.escaped[from.id];
+      if (revived) {
+        const ng = structuredClone(g);
+        delete ng.downed[from.id];
+        this.commit(ng);
+        this.soloDownT = 0;
+      }
+      this.net.fx({ k: 'gift', n: name, g: giftName, c: count, d: diamonds, t: 1, lured: false, heart: revived ? 'revived' : 'idle', ...at });
+      return;
+    }
     let tier = giftTier(diamonds);
     // a big gift during its cooldown still counts as a medium one
     while (tier > 1 && this.giftCooldown[tier] > 0) tier = (tier - 1) as GiftTier;
@@ -244,7 +258,7 @@ export class Host {
       this.brain.lure({ x: pose[0], y: pose[1], z: pose[2] }, tier, from.id, g);
       if (tier === 3) this.net.fx({ k: 'sound', s: 'power', x: pose[0], y: pose[1] + 1, z: pose[2] });
     }
-    this.net.fx({ k: 'gift', n: name, g: giftName, c: count, d: diamonds, t: tier, lured, x: pose[0], y: pose[1] + 1.2, z: pose[2] });
+    this.net.fx({ k: 'gift', n: name, g: giftName, c: count, d: diamonds, t: tier, lured, ...at });
   }
 
   /** About a minute after the lights come back, the hall phone rings. */
@@ -298,7 +312,9 @@ export class Host {
     // Alone in the house there is nobody to pull you up: crawl back to the hall instead.
     if (!end && seen.length === 1 && seen[0].down) {
       this.soloDownT += dt;
-      if (this.soloDownT > 7) {
+      // a live streamer's chat gets time to send a Finger Heart through the stream delay
+      const limit = this.net.players.get(seen[0].id)?.getState('tt') ? 15 : 7;
+      if (this.soloDownT > limit) {
         this.soloDownT = 0;
         const ng = structuredClone(g);
         delete ng.downed[seen[0].id];

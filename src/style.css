@@ -152,7 +152,11 @@ kbd { display: inline-block; font-family: var(--mono); font-size: 18px; border: 
 .gift { font-family: var(--type); font-size: 15px; padding: 6px 12px; background: rgba(0,0,0,0.6); border-right: 3px solid #25f4ee; text-align: right; animation: gin 0.35s ease-out; transition: opacity 1s; }
 .gift.t2 { border-color: #fe2c55; font-size: 16px; }
 .gift.t3 { border-color: #fe2c55; font-size: 19px; color: #fff; background: linear-gradient(90deg, rgba(254,44,85,0.15), rgba(254,44,85,0.55)); box-shadow: 0 0 24px rgba(254,44,85,0.5); animation: gin 0.35s ease-out, gpulse 0.6s ease-in-out 3; }
+.gift.heart { border-color: #ff6fa5; color: #ffe3ee; background: linear-gradient(90deg, rgba(255,111,165,0.1), rgba(255,111,165,0.4)); }
 .gift.out { opacity: 0; }
+/* downed streamer: call to action for the chat */
+#rescue-cta { position: absolute; left: 50%; top: 64%; transform: translateX(-50%); font-family: var(--mono); font-size: clamp(22px, 3.4vw, 34px); letter-spacing: 2px; color: #ffd0e2; white-space: nowrap; text-shadow: 0 0 12px rgba(255,80,150,0.9), 0 0 3px #000; animation: cta 1.2s ease-in-out infinite; }
+@keyframes cta { 50% { transform: translateX(-50%) scale(1.06); color: #fff; } }
 @keyframes gin { from { transform: translateX(30px); opacity: 0; } }
 @keyframes gpulse { 50% { transform: scale(1.05); } }
 

@@ -75,6 +75,9 @@ const S = {
   mk_up: { en: 'upstairs' },
   objWaiting: { en: 'You made it out. Waiting for the others…' },
   objDowned: { en: 'It got you… wait for a teammate' },
+  objDownedSolo: { en: 'It got you… you will crawl back to the hall in a few seconds' },
+  objDownedSoloTt: { en: 'It got you… chat can revive you with a Finger Heart, or you crawl back to the hall in 15 seconds' },
+  rescueCta: { en: '💗 Chat: send a Finger Heart to revive me!' },
 
   // prompts
   pickFuse: { en: 'Take fuse' },
@@ -136,11 +139,13 @@ const S = {
   giftT2: { en: '🔔 {n} sent {g}×{c} · it is hunting the streamer!' },
   giftT3: { en: '👁 {n} sent {g}×{c} · summoned its true form!' },
   giftQuiet: { en: '🎁 {n} sent {g}×{c}' },
+  giftRevive: { en: '💗 {n} sent {g}×{c} · the streamer is back on their feet!' },
+  giftHeart: { en: '💗 {n} sent {g}×{c} · it picks the streamer up if the ghost knocks them down' },
   ttTitle: { en: 'TikTok LIVE gifts (TikFinity)' },
   ttEnable: { en: 'Connect TikFinity: viewer gifts make noise that lures the ghost to the streamer' },
   ttUrl: { en: 'WebSocket URL' },
   ttTiers: {
-    en: '1–9💎: a noise the ghost follows · 10–99💎: it hunts the streamer for 15s · 100💎+: summons its true form nearby',
+    en: '1–9💎: a noise the ghost follows · 10–99💎: it hunts the streamer for 15s · 100💎+: summons its true form nearby · 💗 Finger Heart: picks a downed streamer back up (never lures the ghost)',
   },
   ttHelp: {
     en: 'Run the TikFinity desktop app with your LIVE started. Only the streamer needs this on.',

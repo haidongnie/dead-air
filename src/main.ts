@@ -3,7 +3,7 @@ import { sound } from './core/audio';
 import { loadModels, setAnisotropy } from './core/assets';
 import { Game } from './game/game';
 import { TikFinity, DEFAULT_URL, loopbackUrl, type GiftEvent, type TikState } from './game/tiktok';
-import { giftTier } from './game/state';
+import { giftTier, isRescueGift } from './game/state';
 import { t, type Key } from './i18n';
 
 const MODELS = [
@@ -166,6 +166,7 @@ function renderTt() {
   ttStatus.className = `note ${tt.state === 'live' || (tt.state === 'on' && !quiet) ? 'on' : tt.state === 'on' ? '' : tt.state === 'off' ? '' : 'error'}`;
   $('tt-platform').classList.toggle('hidden', onWindows || tt.state === 'off');
   $('tt-diag-text').textContent = diagText();
+  game.setTikTokReady(tt.state === 'live' || (tt.state === 'on' && !quiet));
   const d = tt.diag;
   game.hud.tiktok(
     tt.state === 'off' ? 'off' : tt.state === 'live' ? 'on' : tt.state === 'on' || tt.state === 'connecting' || tt.state === 'prompt' ? 'connecting' : 'error',
@@ -218,7 +219,10 @@ tt.onGift = (g) => {
   lastGift = g;
   renderTt();
   if (game.started) game.onTikTokGift(g);
-  else if (sound.ready) sound.giftNoise({ x: 0, y: 0, z: -1.5 }, giftTier(g.diamonds));
+  else if (sound.ready) {
+    if (isRescueGift(g.giftId, g.name)) sound.heartChime({ x: 0, y: 0, z: -1.5 }, false);
+    else sound.giftNoise({ x: 0, y: 0, z: -1.5 }, giftTier(g.diamonds));
+  }
 };
 
 const saved = loadTt();
@@ -241,7 +245,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-test]').forEach((b) => {
   b.onclick = () => {
     sound.init();
     sound.resume();
-    tt.simulate(Number(b.dataset.test));
+    tt.simulate(b.dataset.test === 'heart' ? 'heart' : Number(b.dataset.test));
   };
 });
 renderTt();

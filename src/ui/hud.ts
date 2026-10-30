@@ -82,10 +82,10 @@ export class Hud {
   }
 
   /** Gift feed for TikTok LIVE: its own column so viewers can spot their names on stream. */
-  giftToast(text: string, tier: 1 | 2 | 3) {
+  giftToast(text: string, tier: 1 | 2 | 3 | 'heart') {
     const box = $('gifts');
     const d = document.createElement('div');
-    d.className = `gift t${tier}`;
+    d.className = `gift ${tier === 'heart' ? 'heart' : `t${tier}`}`;
     d.textContent = text;
     box.prepend(d);
     setTimeout(() => d.classList.add('out'), tier === 3 ? 9000 : 6000);
@@ -94,6 +94,8 @@ export class Hud {
   }
 
   /** detail: "frames / gifts" so the streamer can see on stream that events are arriving */
+  rescueCta(show: boolean) { $('rescue-cta').classList.toggle('hidden', !show); }
+
   tiktok(state: 'off' | 'connecting' | 'on' | 'error', detail = '') {
     const el = $('tiktok');
     el.className = `${state === 'off' ? 'hidden ' : ''}${state}`;

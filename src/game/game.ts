@@ -124,18 +124,28 @@ export class Game {
   }
 
   /** A gift relayed from TikFinity on this (the streamer's) machine. */
-  onTikTokGift(g: { nick: string; name: string; count: number; diamonds: number }) {
+  /** TikFinity is delivering this streamer's gifts: chat can send a rescue heart. */
+  private ttReady = false;
+  setTikTokReady(ready: boolean) {
+    if (ready === this.ttReady) return;
+    this.ttReady = ready;
+    // the host keeps a solo streamer down longer so the heart can make it through the stream delay
+    if (this.started) this.net.me.setState('tt', ready, true);
+  }
+
+  onTikTokGift(g: { nick: string; giftId: string; name: string; count: number; diamonds: number }) {
     if (!this.started) return;
     if (this.net.game()?.phase !== 'play') {
       // between rounds the gift can't lure anything, but the streamer should still see it arrive
       this.hud.giftToast(t('giftIdle', { n: g.nick, g: g.name, c: g.count }), 1);
       return;
     }
-    this.net.act({ k: 'gift', n: g.nick, g: g.name, c: g.count, d: g.diamonds });
+    this.net.act({ k: 'gift', n: g.nick, g: g.name, c: g.count, d: g.diamonds, i: g.giftId });
   }
 
   async begin(withMic: boolean) {
     this.started = true;
+    this.net.me.setState('tt', this.ttReady, true);
     this.hud.show(true);
     if (withMic) await this.voice.enableMic();
     this.hud.mic(this.voice.hasMic ? 'on' : 'none');
@@ -346,6 +356,11 @@ export class Game {
       }
       case 'gift': {
         const vars = { n: f.n, g: f.g || 'Gift', c: f.c };
+        if (f.heart) {
+          this.hud.giftToast(t(f.heart === 'revived' ? 'giftRevive' : 'giftHeart', vars), 'heart');
+          sound.heartChime({ x: f.x, y: f.y, z: f.z }, f.heart === 'revived');
+          break;
+        }
         const key: Key = !f.lured ? 'giftQuiet' : f.t === 3 ? 'giftT3' : f.t === 2 ? 'giftT2' : 'giftT1';
         this.hud.giftToast(t(key, vars), f.t);
         sound.giftNoise({ x: f.x, y: f.y, z: f.z }, f.t);
@@ -667,6 +682,7 @@ export class Game {
   /** Guided task list: what to do now, where it is (waypoints), and a banner when the step changes. */
   private updateObjective(g: GameState, downed: boolean, escaped: boolean) {
     const obj = objective(g);
+    const solo = [...this.net.players.keys()].filter((id) => !g.escaped[id]).length <= 1;
     const step = t('stepOf', { n: STEPS.indexOf(obj) + 1, total: STEPS.length });
     const items = teamItems(g);
     const fusesFound = g.picked.filter((p) => p.startsWith('f')).length;
@@ -689,7 +705,6 @@ export class Game {
         else { detail = t('objd_basementDoor'); mark(SPOTS.basementDoor, 'mk_bdoor'); }
         break;
       case 'valves': {
-        const solo = [...this.net.players.keys()].filter((id) => !g.escaped[id]).length <= 1;
         detail = t(solo ? 'objd_valvesSolo' : 'objd_valves');
         mark(SPOTS.valveA, 'mk_valve'); mark(SPOTS.valveB, 'mk_valve');
         break;
@@ -708,10 +723,13 @@ export class Game {
       case 'escape': detail = t('objd_escape'); mark(SPOTS.frontDoor, 'mk_exit'); break;
     }
     if (obj === 'power') list.push({ label: `${t('mk_fuse')} ${fusesFound}/3`, state: fusesFound >= 3 ? 'done' : 'todo' });
-    if (downed) this.hud.setObjective(step, t(`obj_${obj}` as Key), t('objDowned'), list);
+    const downKey: Key = !solo ? 'objDowned' : this.ttReady ? 'objDownedSoloTt' : 'objDownedSolo';
+    if (downed) this.hud.setObjective(step, t(`obj_${obj}` as Key), t(downKey), list);
     else if (escaped) this.hud.setObjective('', t('obj_escape'), t('objWaiting'));
     else this.hud.setObjective(step, t(`obj_${obj}` as Key), detail, list);
     // waypoints only while you can act on them
+    // on stream: tell chat that a Finger Heart picks the streamer back up
+    this.hud.rescueCta(downed && g.phase === 'play' && this.ttReady);
     if (downed || escaped || this.hud.modalOpen || g.phase !== 'play') this.markers.hide();
     else this.markers.update(this.camera, targets, this.player.pos);
     const stepKey = `${g.round}:${obj}`;

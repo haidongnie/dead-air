@@ -105,17 +105,27 @@ export type Action =
   | { k: 'doc'; id: string }
   | { k: 'heard' }
   | { k: 'answer' }
-  | { k: 'gift'; n: string; g: string; c: number; d: number }
+  | { k: 'gift'; n: string; g: string; c: number; d: number; i?: string }
   | { k: 'restart' };
 
 export type Fx =
   | { k: 'toast'; key: string; n?: string; r?: string }
   | { k: 'sound'; s: string; x: number; y: number; z: number; n?: number }
   | { k: 'scare'; s: string; n?: string; r?: string }
-  // a TikTok LIVE gift landed: noise at (x,y,z), t = tier 1..3, lured = whether it moved the creature
-  | { k: 'gift'; n: string; g: string; c: number; d: number; t: GiftTier; lured: boolean; x: number; y: number; z: number };
+  // a TikTok LIVE gift landed: noise at (x,y,z), t = tier 1..3, lured = whether it moved the creature,
+  // heart = a Finger Heart that picked the downed streamer up ('revived') or arrived while they were fine ('idle')
+  | { k: 'gift'; n: string; g: string; c: number; d: number; t: GiftTier; lured: boolean; heart?: 'revived' | 'idle'; x: number; y: number; z: number };
 
 export type GiftTier = 1 | 2 | 3;
+
+/**
+ * The friendly gift: a Finger Heart picks a downed streamer back up and never lures the creature.
+ * Matched by TikTok's gift id (TikFinity may localize the name) with the English name as a fallback.
+ */
+export const RESCUE_GIFT_ID = '5487';
+export function isRescueGift(id: string, name: string): boolean {
+  return id === RESCUE_GIFT_ID || /^finger\s*heart$/i.test(name.trim());
+}
 
 /** Diamonds in one gift event -> how hard it pulls the creature. */
 export function giftTier(diamonds: number): GiftTier {

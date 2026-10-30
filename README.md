@@ -53,6 +53,7 @@ Viewers' gifts make the streamer's pocket radio squawk, and the ghost comes for 
 | 1–9 💎 (e.g. Rose) | A noise at the streamer. The ghost comes to it within seconds (returning from hiding early if needed, even before the lights are on). 发出声响，鬼循声而来 |
 | 10–99 💎 | The ghost hunts the streamer for 15 s, a little faster. 鬼追猎主播 15 秒 |
 | 100+ 💎 | Its true form appears near the streamer (never in plain sight) and hunts for 20 s; lights flicker. 在主播附近召唤真身 |
+| 💗 **Finger Heart** | **Rescue gift**: if the ghost has knocked the streamer down, they get back up on the spot. It never lures the ghost; while the streamer is fine it just shows a heart. While down, the screen tells chat "send a Finger Heart to revive me!" (only while TikFinity is actually delivering LIVE events), and a solo streamer stays down 15 s instead of 7 so a heart can make it through the stream delay. 救援礼物：主播被鬼击倒时立刻原地复活，不会引鬼；倒地时屏幕提示观众送比心，单人主播倒地等待时间从 7 秒延长到 15 秒 |
 
 - Combos stack: a quick Rose streak is bundled, so 12 roses in a row count as 12 💎 (tier 2). 连击会合并计算。
 - Cooldowns (3 s / 10 s / 30 s per tier) keep a gift storm from making the round unwinnable. A gift during a cooldown drops to a lower tier; it always makes a sound and shows its toast. 有冷却，刷礼物不会让游戏无法通关。
@@ -65,7 +66,7 @@ Viewers' gifts make the streamer's pocket radio squawk, and the ghost comes for 
 1. Open the **TikFinity Desktop App** (the web version has no local Event API), go LIVE on TikTok, then click **Connect to TikTok LIVE** until TikFinity no longer says "Disconnected". 打开 TikFinity 桌面版，先开播，再点「Connect to TikTok LIVE」。
 2. Open the game in **Chrome or Edge** on the same computer as TikFinity. Expand "TikTok LIVE gifts (TikFinity)" on the title screen and tick the box. 在同一台电脑上用 Chrome / Edge 打开游戏，展开标题页的「TikTok 直播互动」并勾选。
 3. Chrome/Edge will ask whether the site may access **apps on this device**: click **Allow**. If you clicked Block: click the icon left of the address bar → Site settings → "Apps on device" → Allow, then reload. 浏览器询问「访问此设备上的应用」时点「允许」。
-4. The status turns to "Receiving LIVE events ✓" after the first event arrives. Use the 1💎 / 30💎 / 500💎 test buttons to preview the effects. Only the streamer needs this; friends just join with the room code.
+4. The status turns to "Receiving LIVE events ✓" after the first event arrives. Use the 1💎 / 30💎 / 500💎 / 💗 Finger Heart test buttons to preview the effects. Only the streamer needs this; friends just join with the room code.
 
 **Troubleshooting 连不上时**
 

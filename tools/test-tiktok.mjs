@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUT = path.join(ROOT, '.test-build');
-execSync(`npx tsc --ignoreConfig src/game/tiktok.ts src/i18n.ts --outDir .test-build --rootDir src --target es2022 --module es2022 --moduleResolution bundler --skipLibCheck --lib es2023,dom`, { cwd: ROOT, stdio: 'inherit' });
+execSync(`npx tsc --ignoreConfig src/game/tiktok.ts src/game/state.ts src/i18n.ts --outDir .test-build --rootDir src --target es2022 --module es2022 --moduleResolution bundler --skipLibCheck --lib es2023,dom`, { cwd: ROOT, stdio: 'inherit' });
 
 let now = 0;
 const timers = [];
@@ -19,6 +19,7 @@ globalThis.window = { setInterval: (fn, ms) => { timers.push({ fn, ms, next: now
 const advance = (ms) => { const end = now + ms; while (now < end) { now += 50; for (const t of timers) if (now >= t.next) { t.next += t.ms; t.fn(); } } };
 const { TikFinity } = await import(pathToFileURL(path.join(OUT, 'game/tiktok.js')).href);
 const { t } = await import(pathToFileURL(path.join(OUT, 'i18n.js')).href);
+const { isRescueGift } = await import(pathToFileURL(path.join(OUT, 'game/state.js')).href);
 
 let id = 0;
 const gift = (o) => JSON.stringify({ event: 'gift', data: { userId: o.u ?? '1', uniqueId: 'v', nickname: o.nick ?? 'V', giftId: o.gift ?? 5655, giftName: 'Rose', diamondCount: o.d ?? 1, giftType: o.type ?? 1, repeatCount: o.n, repeatEnd: !!o.end, groupId: o.g ?? '0', msgId: o.msgId ?? String(++id) } });
@@ -68,6 +69,15 @@ all &= run('garbage and unknown events ignored', ['not json', JSON.stringify({ e
 }
 // simulate() must not flip the state to live
 { const tt = new TikFinity(); tt.state = 'on'; tt.simulate(500); const ok = tt.state === 'on'; all &= ok; console.log(ok ? 'PASS' : 'FAIL', 'simulate keeps state', tt.state); }
+// Finger Heart: recognised by id (localized names) or English name, keeps its id through combo batching
+{
+  const cases = [['5487', 'Finger Heart', true], ['5487', 'Herz mit Fingern', true], ['', ' finger heart ', true], ['5655', 'Rose', false], ['999', 'Heart Me', false], ['999', 'Hand Heart', false]];
+  const bad = cases.filter(([id, n, want]) => isRescueGift(id, n) !== want);
+  const tt = new TikFinity(); const out = []; tt.onGift = (g) => out.push([g.giftId, g.count, g.diamonds, isRescueGift(g.giftId, g.name)]);
+  tt.simulate('heart'); advance(4000);
+  const ok = !bad.length && JSON.stringify(out) === JSON.stringify([['5487', 2, 10, true]]);
+  all &= ok; console.log(ok ? 'PASS' : 'FAIL', 'finger heart detection + combo', JSON.stringify(out), bad.length ? 'bad: ' + JSON.stringify(bad) : '');
+}
 // t() inserts names literally
 { const s = t('giftT1', { n: "$'{g}$&", g: 'Rose', c: 5 }); const ok = s.startsWith("🎁 $'{g}$& sent Rose×5"); all &= ok; console.log(ok ? 'PASS' : 'FAIL', 't() literal names:', s); }
 console.log(all ? 'ALL PASS' : 'SOME FAILED');
